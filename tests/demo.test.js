@@ -31,3 +31,20 @@ test('la démo couvre filtres et cas limites', () => {
   assert.ok(Math.min(...prix) <= 3 && Math.max(...prix) >= 150);
   assert.ok(json.cartes.every((c) => c.site === 'demo' && /^https:\/\/example\.com\/annonce\/\d+$/.test(c.url)));
 });
+
+test('le profil haut M / bas W32 / pointure 43 voit un mélange de tailles', async () => {
+  const { compatibilite, typeDeTaille } = await import('../js/tailles.js');
+  const profil = {
+    haut: { lettre: 'M', eu: null, mode: 'large' },
+    bas: { lettre: null, eu: null, w: 32, mode: 'large' },
+    pointure: { eu: 43, mode: 'large' },
+  };
+  for (const type of ['haut', 'bas', 'pointure']) {
+    const res = json.cartes
+      .filter((c) => typeDeTaille(c.categorie) === type)
+      .map((c) => compatibilite(c.taille, c.categorie, profil));
+    for (const attendu of ['exacte', 'voisine', null]) {
+      assert.ok(res.includes(attendu), `${type} : aucune carte ${attendu}`);
+    }
+  }
+});
