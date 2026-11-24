@@ -55,3 +55,39 @@ test('repli mémoire : les données déjà persistées restent lisibles', () => 
   assert.deepEqual(store.lire('sd:swipes', []), [{ id: 'a' }]);
   assert.equal(store.lire('sd:pile').gros.length, 200);
 });
+
+function stockageAvecQuota(limite) {
+  const m = new Map();
+  return {
+    m,
+    getItem: (k) => m.get(k) ?? null,
+    setItem: (k, v) => {
+      if (v.length > limite) throw new Error('quota');
+      m.set(k, v);
+    },
+  };
+}
+
+test("une écriture refusée n'empêche pas les petites écritures suivantes", () => {
+  const faux = stockageAvecQuota(100);
+  const store = creerStore(faux);
+  assert.equal(store.ecrire('sd:pile', { gros: 'x'.repeat(200) }), false);
+  assert.equal(store.persistant, false);
+  assert.equal(store.ecrire('sd:swipes', [{ id: 'a' }]), true);
+  assert.deepEqual(JSON.parse(faux.getItem('sd:swipes')), [{ id: 'a' }]);
+});
+
+test("écriture refusée puis réussie sur la même clé : lire renvoie la nouvelle valeur", () => {
+  const store = creerStore(stockageAvecQuota(100));
+  assert.equal(store.ecrire('k', 'x'.repeat(200)), false);
+  assert.equal(store.ecrire('k', 'petit'), true);
+  assert.equal(store.lire('k'), 'petit');
+});
+
+test('méthodes détachées : lire et ecrire fonctionnent sans this', () => {
+  const { ecrire, lire } = creerStore(stockageAvecQuota(100));
+  assert.equal(ecrire('a', 1), true);
+  assert.equal(lire('a'), 1);
+  assert.equal(ecrire('b', 'x'.repeat(200)), false);
+  assert.equal(lire('b').length, 200);
+});
