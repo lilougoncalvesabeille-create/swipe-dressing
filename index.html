@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1419">
+  <meta name="color-scheme" content="dark">
+  <title>Swipe Dressing</title>
+  <link rel="stylesheet" href="app.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <p id="bandeau-stockage" class="bandeau" role="status" hidden>Tes choix ne seront pas gardés</p>
+
+  <main id="ecran" class="ecran" tabindex="-1">
+    <noscript><p>Swipe Dressing a besoin de JavaScript pour fonctionner.</p></noscript>
+  </main>
+
+  <nav class="nav" aria-label="Navigation principale">
+    <button type="button" data-ecran="swipe">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="17" rx="2.5"/><path d="M3.5 7v10M20.5 7v10"/></svg>
+      <span>Swipe</span>
+    </button>
+    <button type="button" data-ecran="favoris">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>
+      <span>Favoris</span>
+    </button>
+    <button type="button" data-ecran="historique">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      <span>Historique</span>
+    </button>
+    <button type="button" data-ecran="reglages">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      <span>Réglages</span>
+    </button>
+  </nav>
+</body>
+</html>
