@@ -2,8 +2,9 @@
 // Aucun état de l'appli ici : main.js fournit la suite des cartes et enregistre les swipes.
 // Tout le texte des annonces passe par des nœuds texte (helper `el`), jamais par innerHTML.
 
-import { el, enregistrerEcran } from './ecrans.js';
-import { RAISONS, SEUIL_ECHAUFFEMENT, garderEnTete } from './paquet.js';
+import { el, enregistrerEcran, photoAvecRepli } from './ecrans.js';
+import { RAISONS, LIBELLES_RAISONS, SEUIL_ECHAUFFEMENT, garderEnTete } from './paquet.js';
+import { formaterPrix, libelleTaille, libelleSite } from './fiche.js';
 import { vitesseX, decisionSwipe, estUnTap, rotation, intensite } from './geste.js';
 
 const DUREE_SORTIE = 250; // ms : animation de sortie (et verrou pendant ce temps)
@@ -11,46 +12,14 @@ const DUREE_RAISONS = 4000; // ms : temps d'affichage des puces de raison
 const DUREE_NOTE = 1500; // ms : confirmation « Noté »
 const MAX_ECHANTILLONS = 30;
 
-const LIBELLES_RAISONS = {
-  prix: 'Trop cher',
-  couleur: 'Couleur',
-  coupe: 'Coupe',
-  matiere: 'Matière',
-  style: 'Pas mon style',
-};
-
-const euros0 = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
-const euros2 = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 });
-
-function formaterPrix(prix) {
-  if (!Number.isFinite(prix)) return '';
-  return Number.isInteger(prix) ? euros0.format(prix) : euros2.format(prix);
-}
-
-function libelleTaille(taille) {
-  const t = String(taille ?? '').trim();
-  if (!t) return 'Taille non précisée';
-  return /^taille\b/i.test(t) ? t : `Taille ${t}`;
-}
-
 const mouvementReduit = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-
-const photoIndisponible = () => el('div', { class: 'photo-indisponible' }, 'Photo indisponible');
 
 function construireCarte(entree, active) {
   const { carte, voisine } = entree;
-  const photo = el('div', { class: 'carte-photo' });
-  const src = typeof carte.photo === 'string' ? carte.photo.trim() : '';
-  if (src) {
-    const img = el('img', { src, alt: '', draggable: 'false', decoding: 'async' });
-    // L'événement error est toujours asynchrone : l'écouteur posé ici l'attrape.
-    img.addEventListener('error', () => img.replaceWith(photoIndisponible()), { once: true });
-    photo.append(img);
-  } else {
-    photo.append(photoIndisponible());
-  }
+  const photo = el('div', { class: 'carte-photo' },
+    photoAvecRepli(carte.photo, { alt: '', draggable: 'false', decoding: 'async' }));
 
-  const source = [carte.site, carte.marque].filter((x) => typeof x === 'string' && x.trim()).join(' · ');
+  const source = [libelleSite(carte.site), carte.marque].filter((x) => typeof x === 'string' && x.trim()).join(' · ');
   const infos = el('div', { class: 'carte-infos' },
     el('div', { class: 'carte-ligne' },
       el('h2', { class: 'carte-titre' }, carte.titre),

@@ -79,8 +79,6 @@ body[data-ecran="questionnaire"] .ecran {
 .entete { margin-bottom: 20px; }
 .chapeau { margin: 8px 0 0; color: var(--texte-doux); }
 
-.attente { padding-top: 28vh; text-align: center; }
-.attente p { color: var(--texte-doux); font-size: 1.1rem; }
 
 /* --- Barre de navigation --- */
 
@@ -610,6 +608,222 @@ body[data-ecran="swipe"] .ecran {
 .action:disabled { opacity: 0.35; cursor: default; }
 .action:active:not(:disabled) { transform: scale(0.93); }
 .action:focus-visible { outline: 2px solid var(--texte); outline-offset: 3px; }
+
+/* --- Favoris et Historique --- */
+
+.profil-style {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 18px;
+}
+.profil-barres { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.profil-barre {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.profil-nom { font-weight: 600; }
+.profil-pct { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.profil-jauge {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.profil-jauge span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vignette {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--rayon);
+}
+
+.vignette-ouvrir {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.vignette-ouvrir:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--rayon); }
+
+.vignette-photo {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.vignette-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vignette-photo .photo-indisponible { inset: 8px; border-radius: 10px; font-size: 0.85rem; }
+
+.vignette-infos {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+.vignette-prix { color: var(--accent); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vignette-site { min-width: 0; color: var(--texte-doux); font-size: 0.85rem; text-align: right; }
+
+.vignette-pied { display: grid; gap: 8px; margin-top: auto; padding: 0 10px 10px; }
+.vignette-statut { margin: 0; font-size: 0.85rem; font-weight: 600; }
+.statut-aime { color: #3ddc97; }
+.statut-ecarte { color: var(--texte-doux); }
+.bouton-repecher {
+  min-height: 44px;
+  padding: 0 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--bord);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bouton-repecher:active { background: var(--accent); color: var(--accent-texte); }
+.bouton-repecher:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Ruban « Plus dispo » en travers du coin de la photo */
+.ruban {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  padding: 3px 10px;
+  background: var(--alerte-fond);
+  border: 1px solid var(--alerte-texte);
+  border-radius: 999px;
+  color: var(--alerte-texte);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.liste-vide {
+  display: grid;
+  gap: 8px;
+  padding: 32px 16px;
+  background: var(--surface);
+  border-radius: 18px;
+  text-align: center;
+}
+.liste-vide-titre { margin: 0; font-size: 1.15rem; font-weight: 700; }
+
+/* --- Fiche détail --- */
+
+body[data-ecran="detail"] .ecran { padding-top: calc(8px + env(safe-area-inset-top)); }
+
+.fiche-barre { margin-bottom: 8px; }
+.bouton-retour {
+  min-height: 44px;
+  margin-left: -8px;
+  padding: 0 8px;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+.bouton-retour:focus-visible { outline: 2px solid var(--accent); }
+
+.fiche { display: grid; gap: 16px; }
+
+.carrousel { position: relative; }
+.carrousel-piste {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  background: var(--surface);
+  border-radius: 18px;
+}
+.carrousel-piste::-webkit-scrollbar { display: none; }
+.carrousel-piste:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.carrousel-photo {
+  position: relative;
+  flex: 0 0 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 62vh;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+.carrousel-photo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.carrousel-compteur {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 2px 10px;
+  background: rgba(15, 20, 25, 0.75);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.fiche-entete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.fiche-titre { font-size: 1.4rem; }
+.fiche-prix {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 800;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.fiche-infos {
+  display: grid;
+  margin: 0;
+  padding: 4px 16px;
+  background: var(--surface);
+  border-radius: var(--rayon);
+}
+.fiche-ligne {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bord);
+}
+.fiche-ligne:last-child { border-bottom: 0; }
+.fiche-ligne dt { color: var(--texte-doux); }
+.fiche-ligne dd { margin: 0; font-weight: 600; text-align: right; }
+
+.fiche-description { display: grid; gap: 6px; }
+.fiche-description h2 { font-size: 1.05rem; }
+.fiche-description p { margin: 0; white-space: pre-line; }
+
+.fiche-actions { display: grid; gap: 12px; }
+.bouton-lien {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

@@ -11,6 +11,14 @@ export const SEUIL_ECHAUFFEMENT = 15;
 // Raisons de refus, dans l'ordre d'affichage des puces.
 export const RAISONS = ['prix', 'couleur', 'coupe', 'matiere', 'style'];
 
+export const LIBELLES_RAISONS = {
+  prix: 'Trop cher',
+  couleur: 'Couleur',
+  coupe: 'Coupe',
+  matiere: 'Matière',
+  style: 'Pas mon style',
+};
+
 export function profilParDefaut() {
   return {
     age: null,

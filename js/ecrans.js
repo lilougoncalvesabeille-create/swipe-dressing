@@ -1,4 +1,4 @@
-// Rendu des écrans : registre d'écrans, questionnaire, réglages et écrans d'attente.
+// Rendu des écrans : registre d'écrans, photo avec repli, questionnaire et réglages.
 // Ce module ne garde aucun état de l'appli : main.js lui passe tout par `donnees`.
 
 import {
@@ -72,18 +72,24 @@ export function majBandeauStockage(persistant) {
   if (bandeau) bandeau.hidden = persistant !== false;
 }
 
-const titre = (texte) => el('h1', { tabindex: '-1' }, texte);
+export const titre = (texte, attributs = {}) => el('h1', { tabindex: '-1', ...attributs }, texte);
 
-function attente(texteTitre) {
-  return (conteneur) => {
-    conteneur.append(el('section', { class: 'attente' }, titre(texteTitre), el('p', {}, 'Bientôt…')));
-  };
+// --- Photo d'annonce avec repli « Photo indisponible » (carte de swipe, vignettes, carrousel) ---
+
+const photoIndisponible = () => el('span', { class: 'photo-indisponible' }, 'Photo indisponible');
+
+/**
+ * <img> de l'annonce, remplacée par « Photo indisponible » si l'adresse est vide
+ * ou si l'image ne se charge pas. Le parent doit être en position: relative.
+ */
+export function photoAvecRepli(src, attributs = {}) {
+  const adresse = typeof src === 'string' ? src.trim() : '';
+  if (!adresse) return photoIndisponible();
+  const img = el('img', { alt: '', ...attributs, src: adresse });
+  // L'événement error est toujours asynchrone : l'écouteur posé ici l'attrape.
+  img.addEventListener('error', () => img.replaceWith(photoIndisponible()), { once: true });
+  return img;
 }
-
-// Écrans d'attente : remplacés par la tâche 8 (listes, fiche). L'écran de swipe est dans swipe-ui.js.
-enregistrerEcran('favoris', attente('Favoris'));
-enregistrerEcran('historique', attente('Historique'));
-enregistrerEcran('detail', attente('Fiche'));
 
 // --- Formulaire de profil (partagé par le questionnaire et les réglages) ---
 
