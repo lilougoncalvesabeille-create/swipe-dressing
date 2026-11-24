@@ -1,0 +1,1172 @@
+{
+ "version": 1,
+ "genere_le": "2026-11-24T08:00:00Z",
+ "source": "demo",
+ "styles": [
+  {
+   "nom": "streetwear",
+   "emb": "fwAAAAAAAAA="
+  },
+  {
+   "nom": "minimaliste",
+   "emb": "AH8AAAAAAAA="
+  },
+  {
+   "nom": "vintage",
+   "emb": "AAB/AAAAAAA="
+  },
+  {
+   "nom": "workwear",
+   "emb": "AAAAfwAAAAA="
+  },
+  {
+   "nom": "chic",
+   "emb": "AAAAAH8AAAA="
+  },
+  {
+   "nom": "sportswear",
+   "emb": "AAAAAAB/AAA="
+  }
+ ],
+ "echauffement": [
+  {
+   "id": "demo:e1",
+   "site": "demo",
+   "titre": "Sweat zippé à capuche",
+   "description": "Sweat zippé à capuche, coloris noir, poche kangourou.",
+   "prix": 30,
+   "categorie": "sweat",
+   "marque": "Urbanwear",
+   "etat": "bon",
+   "taille": "L",
+   "photo": "data/demo/pull-streetwear.svg",
+   "photos": [
+    "data/demo/pull-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/41",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "cB/k4+sT+Ak="
+  },
+  {
+   "id": "demo:e2",
+   "site": "demo",
+   "titre": "T-shirt oversize blanc",
+   "description": "T-shirt blanc oversize avec logo discret.",
+   "prix": 14,
+   "categorie": "t-shirt",
+   "marque": "Urbanwear",
+   "etat": "tres-bon",
+   "taille": "XL",
+   "photo": "data/demo/tshirt-streetwear.svg",
+   "photos": [
+    "data/demo/tshirt-streetwear.svg",
+    "data/demo/pull-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/42",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "dRwY7BLuDAA="
+  },
+  {
+   "id": "demo:e3",
+   "site": "demo",
+   "titre": "Baskets montantes rouges",
+   "description": "Baskets montantes rouge vif, semelle cassée blanche.",
+   "prix": 50,
+   "categorie": "chaussures",
+   "marque": "Kicksy",
+   "etat": "bon",
+   "taille": "42",
+   "photo": "data/demo/chaussure-streetwear.svg",
+   "photos": [
+    "data/demo/chaussure-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/43",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "cxTpIO7s+Qk="
+  },
+  {
+   "id": "demo:e4",
+   "site": "demo",
+   "titre": "Pull ras du cou gris clair",
+   "description": "Pull en laine fine gris clair, coupe droite.",
+   "prix": 40,
+   "categorie": "pull",
+   "marque": "Nordlin",
+   "etat": "tres-bon",
+   "taille": "M",
+   "photo": "data/demo/pull-minimaliste.svg",
+   "photos": [
+    "data/demo/pull-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/44",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "EnMSHuXr+gg="
+  },
+  {
+   "id": "demo:e5",
+   "site": "demo",
+   "titre": "Pantalon large en coton",
+   "description": "Pantalon large coloris sable, taille haute.",
+   "prix": 35,
+   "categorie": "pantalon",
+   "marque": "Uniforme",
+   "etat": "bon",
+   "taille": "40",
+   "photo": "data/demo/pantalon-minimaliste.svg",
+   "photos": [
+    "data/demo/pantalon-minimaliste.svg",
+    "data/demo/pull-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/45",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "7G/g5h8YB/w="
+  },
+  {
+   "id": "demo:e6",
+   "site": "demo",
+   "titre": "Sac cabas en toile",
+   "description": "Grand cabas en toile épaisse, anses en cuir.",
+   "prix": 25,
+   "categorie": "sac",
+   "marque": "Ligne",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/sac-minimaliste.svg",
+   "photos": [
+    "data/demo/sac-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/46",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6nLk5BwRBfg="
+  },
+  {
+   "id": "demo:e7",
+   "site": "demo",
+   "titre": "Robe chemise rétro",
+   "description": "Robe chemise à ceinture, motif pied-de-poule.",
+   "prix": 28,
+   "categorie": "robe",
+   "marque": "Maison Lucie",
+   "etat": "bon",
+   "taille": "38",
+   "photo": "data/demo/robe-vintage.svg",
+   "photos": [
+    "data/demo/robe-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/47",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6eNx6SDpAgI="
+  },
+  {
+   "id": "demo:e8",
+   "site": "demo",
+   "titre": "Chemise à carreaux flanelle",
+   "description": "Chemise en flanelle à carreaux, douce et chaude.",
+   "prix": 18,
+   "categorie": "chemise",
+   "marque": null,
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/tshirt-vintage.svg",
+   "photos": [
+    "data/demo/tshirt-vintage.svg",
+    "data/demo/pull-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/48",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6+hyExvi+ws="
+  },
+  {
+   "id": "demo:e9",
+   "site": "demo",
+   "titre": "Veste en jean doublée",
+   "description": "Veste en jean délavée, doublure en mouton synthétique.",
+   "prix": 42,
+   "categorie": "veste",
+   "marque": "Retrolab",
+   "etat": "bon",
+   "taille": "L",
+   "photo": "data/demo/veste-vintage.svg",
+   "photos": [
+    "data/demo/veste-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/49",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "FB1yFBbg+f0="
+  },
+  {
+   "id": "demo:e10",
+   "site": "demo",
+   "titre": "Veste en toile cirée",
+   "description": "Veste en toile cirée, col en velours, boutons-pression.",
+   "prix": 55,
+   "categorie": "veste",
+   "marque": "Atelier Nord",
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/veste-workwear.svg",
+   "photos": [
+    "data/demo/veste-workwear.svg",
+    "data/demo/pull-workwear.svg",
+    "data/demo/sac-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/50",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "HRXrc+rn/vw="
+  },
+  {
+   "id": "demo:e11",
+   "site": "demo",
+   "titre": "Jean de travail brun",
+   "description": "Jean de travail brun, coupe droite, coutures doubles.",
+   "prix": 30,
+   "categorie": "jean",
+   "marque": "Denimco",
+   "etat": "bon",
+   "taille": "W32 L34",
+   "photo": "data/demo/pantalon-workwear.svg",
+   "photos": [
+    "data/demo/pantalon-workwear.svg",
+    "data/demo/pull-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/51",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "3+4UcRod/Po="
+  },
+  {
+   "id": "demo:e12",
+   "site": "demo",
+   "titre": "Gants de travail en cuir",
+   "description": "Gants de manutention en cuir, paume renforcée.",
+   "prix": 6,
+   "categorie": "gants",
+   "marque": "Forgeron",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/gants-workwear.svg",
+   "photos": [
+    "data/demo/gants-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/52",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4hnkbOEf9/c="
+  },
+  {
+   "id": "demo:e13",
+   "site": "demo",
+   "titre": "Robe portefeuille bordeaux",
+   "description": "Robe portefeuille en crêpe, manches trois-quarts.",
+   "prix": 45,
+   "categorie": "robe",
+   "marque": "Maison Éléna",
+   "etat": "tres-bon",
+   "taille": "S",
+   "photo": "data/demo/robe-chic.svg",
+   "photos": [
+    "data/demo/robe-chic.svg"
+   ],
+   "url": "https://example.com/annonce/53",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4+gY6XIaBP8="
+  },
+  {
+   "id": "demo:e14",
+   "site": "demo",
+   "titre": "Jupe crayon noire",
+   "description": "Jupe crayon en laine, fente au dos, doublée.",
+   "prix": 30,
+   "categorie": "jupe",
+   "marque": "Maison Éléna",
+   "etat": "bon",
+   "taille": "38",
+   "photo": "data/demo/jupe-chic.svg",
+   "photos": [
+    "data/demo/jupe-chic.svg",
+    "data/demo/pull-chic.svg"
+   ],
+   "url": "https://example.com/annonce/54",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "7B4c320fCfo="
+  },
+  {
+   "id": "demo:e15",
+   "site": "demo",
+   "titre": "Ceinture fine en cuir",
+   "description": "Ceinture fine en cuir noir, boucle dorée.",
+   "prix": 12,
+   "categorie": "ceinture",
+   "marque": "Maison Éléna",
+   "etat": "neuf",
+   "taille": "Taille unique",
+   "photo": "data/demo/ceinture-chic.svg",
+   "photos": [
+    "data/demo/ceinture-chic.svg",
+    "data/demo/pull-chic.svg",
+    "data/demo/sac-chic.svg"
+   ],
+   "url": "https://example.com/annonce/55",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6OIh327uBfc="
+  },
+  {
+   "id": "demo:e16",
+   "site": "demo",
+   "titre": "T-shirt de sport à bandes",
+   "description": "T-shirt technique vert à bandes latérales.",
+   "prix": 9,
+   "categorie": "t-shirt",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/tshirt-sportswear.svg",
+   "photos": [
+    "data/demo/tshirt-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/56",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "GeTmG+pxBPo="
+  },
+  {
+   "id": "demo:e17",
+   "site": "demo",
+   "titre": "Short de basket long",
+   "description": "Short de basket long, maille filet, taille élastiquée.",
+   "prix": 12,
+   "categorie": "short",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "L",
+   "photo": "data/demo/short-sportswear.svg",
+   "photos": [
+    "data/demo/short-sportswear.svg",
+    "data/demo/pull-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/57",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "5u7tGe11+wM="
+  },
+  {
+   "id": "demo:e18",
+   "site": "demo",
+   "titre": "Casquette de running",
+   "description": "Casquette légère à visière courte, bandeau anti-sueur.",
+   "prix": 8,
+   "categorie": "casquette",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/casquette-sportswear.svg",
+   "photos": [
+    "data/demo/casquette-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/58",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6RIg5BdxCgo="
+  }
+ ],
+ "cartes": [
+  {
+   "id": "demo:1",
+   "site": "demo",
+   "titre": "Sweat à capuche oversize noir",
+   "description": "Sweat épais à capuche, coupe oversize, logo brodé sur la poitrine. Porté quelques fois, aucun bouloche.",
+   "prix": 35,
+   "categorie": "sweat",
+   "marque": "Nike",
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/pull-streetwear.svg",
+   "photos": [
+    "data/demo/pull-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/1",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "bOAfHOUd9wg="
+  },
+  {
+   "id": "demo:2",
+   "site": "demo",
+   "titre": "T-shirt imprimé graphique",
+   "description": "T-shirt en coton avec grand imprimé dans le dos, coupe boxy. Très bon état.",
+   "prix": 12,
+   "categorie": "t-shirt",
+   "marque": "Urbanwear",
+   "etat": "tres-bon",
+   "taille": "L",
+   "photo": "data/demo/tshirt-streetwear.svg",
+   "photos": [
+    "data/demo/tshirt-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/2",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "cuUaGefu/QY="
+  },
+  {
+   "id": "demo:3",
+   "site": "demo",
+   "titre": "Jean baggy délavé",
+   "description": "Jean large taille mi-haute, délavage clair, légèrement usé aux ourlets.",
+   "prix": 40,
+   "categorie": "jean",
+   "marque": "Denimco",
+   "etat": "bon",
+   "taille": "W32 L34",
+   "photo": "data/demo/pantalon-streetwear.svg",
+   "photos": [
+    "data/demo/pantalon-streetwear.svg",
+    "data/demo/pull-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/3",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "cRzg7RYX/wo="
+  },
+  {
+   "id": "demo:4",
+   "site": "demo",
+   "titre": "Baskets montantes blanches",
+   "description": "Baskets montantes en cuir synthétique, semelle épaisse. Quelques traces sur les côtés.",
+   "prix": 55,
+   "categorie": "chaussures",
+   "marque": "Kicksy",
+   "etat": "bon",
+   "taille": "43",
+   "photo": "data/demo/chaussure-streetwear.svg",
+   "photos": [
+    "data/demo/chaussure-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/4",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "cSEX4xkS/gI="
+  },
+  {
+   "id": "demo:5",
+   "site": "demo",
+   "titre": "Casquette snapback brodée",
+   "description": "Casquette plate réglable avec broderie sur le devant. Jamais portée.",
+   "prix": 3,
+   "categorie": "casquette",
+   "marque": "Urbanwear",
+   "etat": "neuf-etiquette",
+   "taille": "Taille unique",
+   "photo": "data/demo/casquette-streetwear.svg",
+   "photos": [
+    "data/demo/casquette-streetwear.svg",
+    "data/demo/pull-streetwear.svg",
+    "data/demo/sac-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/5",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "b+Ig4e8a+v4="
+  },
+  {
+   "id": "demo:6",
+   "site": "demo",
+   "titre": "Coach jacket coupe-vent",
+   "description": "Veste légère à boutons pression, doublure filet. La taille est sur une étiquette effacée.",
+   "prix": 48,
+   "categorie": "veste",
+   "marque": "Blockstreet",
+   "etat": "bon",
+   "taille": "Voir description",
+   "photo": "data/demo/veste-streetwear.svg",
+   "photos": [
+    "data/demo/veste-streetwear.svg",
+    "data/demo/pull-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/6",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "c+sZ6xIg+Qg="
+  },
+  {
+   "id": "demo:7",
+   "site": "demo",
+   "titre": "Short cargo large",
+   "description": "Short cargo avec grandes poches latérales, coupe très ample. Un peu délavé.",
+   "prix": 18,
+   "categorie": "short",
+   "marque": "Urbanwear",
+   "etat": "satisfaisant",
+   "taille": "XXL",
+   "photo": "data/demo/short-streetwear.svg",
+   "photos": [
+    "data/demo/short-streetwear.svg"
+   ],
+   "url": "https://example.com/annonce/7",
+   "dispo": false,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "bx7nFh4YCQs="
+  },
+  {
+   "id": "demo:8",
+   "site": "demo",
+   "titre": "Pull col roulé en laine mérinos",
+   "description": "Pull fin en laine mérinos, col roulé, coloris grège. Très doux, sans bouloches.",
+   "prix": 62,
+   "categorie": "pull",
+   "marque": "Nordlin",
+   "etat": "tres-bon",
+   "taille": "M",
+   "photo": "data/demo/pull-minimaliste.svg",
+   "photos": [
+    "data/demo/pull-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/8",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "G3MS7R7rCvY="
+  },
+  {
+   "id": "demo:9",
+   "site": "demo",
+   "titre": "T-shirt coton épais écru",
+   "description": "T-shirt uni en coton épais, coupe droite, col rond. Jamais porté.",
+   "prix": 15,
+   "categorie": "t-shirt",
+   "marque": "Uniforme",
+   "etat": "neuf",
+   "taille": "S",
+   "photo": "data/demo/tshirt-minimaliste.svg",
+   "photos": [
+    "data/demo/tshirt-minimaliste.svg",
+    "data/demo/pull-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/9",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "IHLk5RHuCQU="
+  },
+  {
+   "id": "demo:10",
+   "site": "demo",
+   "titre": "Pantalon droit en lin beige",
+   "description": "Pantalon fluide en lin, taille élastiquée discrète, coupe droite.",
+   "prix": 45,
+   "categorie": "pantalon",
+   "marque": "Nordlin",
+   "etat": "bon",
+   "taille": "42",
+   "photo": "data/demo/pantalon-minimaliste.svg",
+   "photos": [
+    "data/demo/pantalon-minimaliste.svg",
+    "data/demo/pull-minimaliste.svg",
+    "data/demo/sac-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/10",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "427nFx4gBvk="
+  },
+  {
+   "id": "demo:11",
+   "site": "demo",
+   "titre": "Derbies cuir blanc épurées",
+   "description": "Derbies en cuir lisse blanc cassé, semelle fine. Légères marques de plis.",
+   "prix": 85,
+   "categorie": "chaussures",
+   "marque": "Ligne",
+   "etat": "bon",
+   "taille": "43",
+   "photo": "data/demo/chaussure-minimaliste.svg",
+   "photos": [
+    "data/demo/chaussure-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/11",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4nLr6+7h/Qg="
+  },
+  {
+   "id": "demo:12",
+   "site": "demo",
+   "titre": "Écharpe en cachemire grise",
+   "description": "Grande écharpe en cachemire gris perle, bords francs. Très bon état.",
+   "prix": 70,
+   "categorie": "echarpe",
+   "marque": "Nordlin",
+   "etat": "tres-bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/inexistant.svg",
+   "photos": [
+    "data/demo/inexistant.svg",
+    "data/demo/echarpe-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/12",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "7nLf5BQSBws="
+  },
+  {
+   "id": "demo:13",
+   "site": "demo",
+   "titre": "Manteau long en laine",
+   "description": "Manteau droit en laine mélangée, fermeture cachée, longueur genou. Tombé impeccable.",
+   "prix": 150,
+   "categorie": "manteau",
+   "marque": "Ligne",
+   "etat": "tres-bon",
+   "taille": "M/L",
+   "photo": "data/demo/veste-minimaliste.svg",
+   "photos": [
+    "data/demo/veste-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/13",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4nEW7eLp9fk="
+  },
+  {
+   "id": "demo:14",
+   "site": "demo",
+   "titre": "Jupe midi plissée",
+   "description": "Jupe plissée mi-longue, taille élastiquée, coloris sable.",
+   "prix": 28,
+   "categorie": "jupe",
+   "marque": "Uniforme",
+   "etat": "bon",
+   "taille": "38",
+   "photo": "data/demo/jupe-minimaliste.svg",
+   "photos": [
+    "data/demo/jupe-minimaliste.svg"
+   ],
+   "url": "https://example.com/annonce/14",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6HHt3+rm9gE="
+  },
+  {
+   "id": "demo:15",
+   "site": "demo",
+   "titre": "Chemise à motifs années 70",
+   "description": "Chemise à grand col pointu et motifs géométriques, dénichée en friperie. Tissu léger.",
+   "prix": 22,
+   "categorie": "chemise",
+   "marque": null,
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/tshirt-vintage.svg",
+   "photos": [
+    "data/demo/tshirt-vintage.svg",
+    "data/demo/pull-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/15",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4OtyGxLq+QM="
+  },
+  {
+   "id": "demo:16",
+   "site": "demo",
+   "titre": "Robe fleurie vintage",
+   "description": "Robe mi-longue à petites fleurs, manches courtes, zip au dos.",
+   "prix": 30,
+   "categorie": "robe",
+   "marque": "Maison Lucie",
+   "etat": "bon",
+   "taille": "38/40",
+   "photo": "data/demo/robe-vintage.svg",
+   "photos": [
+    "data/demo/robe-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/16",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "HBRwGh4bCf0="
+  },
+  {
+   "id": "demo:17",
+   "site": "demo",
+   "titre": "Veste en velours côtelé marron",
+   "description": "Veste en gros velours côtelé, boutons en bois, doublure rayée. Coudes un peu lustrés.",
+   "prix": 38,
+   "categorie": "veste",
+   "marque": "Retrolab",
+   "etat": "satisfaisant",
+   "taille": "L",
+   "photo": "data/demo/veste-vintage.svg",
+   "photos": [
+    "data/demo/veste-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/17",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "7R1y6R/rBAo="
+  },
+  {
+   "id": "demo:18",
+   "site": "demo",
+   "titre": "Pantalon à pinces taille haute",
+   "description": "Pantalon à pinces en laine, taille haute, jambe droite. Longueur 32.",
+   "prix": 25,
+   "categorie": "pantalon",
+   "marque": "Retrolab",
+   "etat": "bon",
+   "taille": "W34 L32",
+   "photo": "data/demo/pantalon-vintage.svg",
+   "photos": [
+    "data/demo/pantalon-vintage.svg",
+    "data/demo/pull-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/18",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6R5wGxniBQM="
+  },
+  {
+   "id": "demo:19",
+   "site": "demo",
+   "titre": "Sac bandoulière en cuir patiné",
+   "description": "Petit sac en cuir patiné par le temps, fermoir laiton d'origine.",
+   "prix": 35,
+   "categorie": "sac",
+   "marque": "Retrolab",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/sac-vintage.svg",
+   "photos": [
+    "data/demo/sac-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/19",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "HOlv3+EW/v0="
+  },
+  {
+   "id": "demo:20",
+   "site": "demo",
+   "titre": "Gants en cuir doublés",
+   "description": "Gants en cuir souple doublés de laine, coloris cognac.",
+   "prix": 14,
+   "categorie": "gants",
+   "marque": "Maison Lucie",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/gants-vintage.svg",
+   "photos": [
+    "data/demo/gants-vintage.svg",
+    "data/demo/pull-vintage.svg",
+    "data/demo/sac-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/20",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "Hhdz7Bnu/vc="
+  },
+  {
+   "id": "demo:21",
+   "site": "demo",
+   "titre": "Bottines à lacets en cuir",
+   "description": "Bottines à lacets, talon bloc, cuir marron patiné. Ressemelées récemment.",
+   "prix": 58,
+   "categorie": "chaussures",
+   "marque": "Retrolab",
+   "etat": "bon",
+   "taille": "42,5",
+   "photo": "data/demo/chaussure-vintage.svg",
+   "photos": [
+    "data/demo/chaussure-vintage.svg",
+    "data/demo/pull-vintage.svg"
+   ],
+   "url": "https://example.com/annonce/21",
+   "dispo": false,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "GxRz5OkU9ws="
+  },
+  {
+   "id": "demo:22",
+   "site": "demo",
+   "titre": "Veste de travail bleu de chauffe",
+   "description": "Veste droite en coton épais, quatre poches plaquées, boutons métal.",
+   "prix": 45,
+   "categorie": "veste",
+   "marque": "Carhartt",
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/veste-workwear.svg",
+   "photos": [
+    "data/demo/veste-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/22",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "HOcecREeAf8="
+  },
+  {
+   "id": "demo:23",
+   "site": "demo",
+   "titre": "Pantalon cargo renforcé aux genoux",
+   "description": "Pantalon de chantier, genoux renforcés, passants porte-outils.",
+   "prix": 32,
+   "categorie": "pantalon",
+   "marque": "Atelier Nord",
+   "etat": "bon",
+   "taille": "W32 L32",
+   "photo": "data/demo/pantalon-workwear.svg",
+   "photos": [
+    "data/demo/pantalon-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/23",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "7h4ZcuviAvw="
+  },
+  {
+   "id": "demo:24",
+   "site": "demo",
+   "titre": "Chaussures de sécurité en cuir",
+   "description": "Chaussures montantes à coque, cuir gras, semelle antidérapante. Peu servi.",
+   "prix": 40,
+   "categorie": "chaussures",
+   "marque": "Forgeron",
+   "etat": "tres-bon",
+   "taille": "43",
+   "photo": "data/demo/chaussure-workwear.svg",
+   "photos": [
+    "data/demo/chaussure-workwear.svg",
+    "data/demo/pull-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/24",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "GhUacOAb/vc="
+  },
+  {
+   "id": "demo:25",
+   "site": "demo",
+   "titre": "Ceinture en cuir épais",
+   "description": "Ceinture large en cuir épais avec grosse boucle en laiton.",
+   "prix": 9,
+   "categorie": "ceinture",
+   "marque": "Forgeron",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/ceinture-workwear.svg",
+   "photos": [
+    "data/demo/ceinture-workwear.svg",
+    "data/demo/pull-workwear.svg",
+    "data/demo/sac-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/25",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "FOAfb+rhBAg="
+  },
+  {
+   "id": "demo:26",
+   "site": "demo",
+   "titre": "Sweat gris chiné épais",
+   "description": "Sweat molletonné gris chiné, col rond, coupe ample.",
+   "prix": 20,
+   "categorie": "sweat",
+   "marque": "Atelier Nord",
+   "etat": "tres-bon",
+   "taille": "L",
+   "photo": "data/demo/pull-workwear.svg",
+   "photos": [
+    "data/demo/pull-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/26",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4uDvb+IYCv8="
+  },
+  {
+   "id": "demo:27",
+   "site": "demo",
+   "titre": "Bonnet en laine côtelée",
+   "description": "Bonnet chaud en grosse maille côtelée, revers large.",
+   "prix": 8,
+   "categorie": "bonnet",
+   "marque": "Forgeron",
+   "etat": "neuf",
+   "taille": "Taille unique",
+   "photo": "data/demo/bonnet-workwear.svg",
+   "photos": [
+    "data/demo/bonnet-workwear.svg",
+    "data/demo/pull-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/27",
+   "dispo": false,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6uIeb+Lp//s="
+  },
+  {
+   "id": "demo:28",
+   "site": "demo",
+   "titre": "Jean brut selvedge",
+   "description": "Jean brut japonais à lisière, jamais lavé, coupe droite.",
+   "prix": 75,
+   "categorie": "jean",
+   "marque": "Denimco",
+   "etat": "neuf-etiquette",
+   "taille": "W32",
+   "photo": "data/demo/pantalon-workwear.svg",
+   "photos": [
+    "data/demo/pantalon-workwear.svg"
+   ],
+   "url": "https://example.com/annonce/28",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6BoYcubo/Ag="
+  },
+  {
+   "id": "demo:29",
+   "site": "demo",
+   "titre": "Robe fourreau noire",
+   "description": "Robe fourreau mi-longue, bretelles fines, doublée. Idéale pour une soirée.",
+   "prix": 65,
+   "categorie": "robe",
+   "marque": "Maison Éléna",
+   "etat": "tres-bon",
+   "taille": "S",
+   "photo": "data/demo/robe-chic.svg",
+   "photos": [
+    "data/demo/robe-chic.svg"
+   ],
+   "url": "https://example.com/annonce/29",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "4OQZ6nEX/v0="
+  },
+  {
+   "id": "demo:30",
+   "site": "demo",
+   "titre": "Chemise en soie ivoire",
+   "description": "Chemise fluide en soie, col classique, boutons nacrés.",
+   "prix": 48,
+   "categorie": "chemise",
+   "marque": "Maison Éléna",
+   "etat": "neuf",
+   "taille": "M",
+   "photo": "data/demo/tshirt-chic.svg",
+   "photos": [
+    "data/demo/tshirt-chic.svg",
+    "data/demo/pull-chic.svg"
+   ],
+   "url": "https://example.com/annonce/30",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "Ex4g5HDqCfY="
+  },
+  {
+   "id": "demo:31",
+   "site": "demo",
+   "titre": "Trench camel doublé",
+   "description": "Trench croisé camel, ceinture, doublure amovible. Quelques traces d'usure au col.",
+   "prix": 120,
+   "categorie": "manteau",
+   "marque": "Maison Éléna",
+   "etat": "bon",
+   "taille": "40",
+   "photo": "data/demo/veste-chic.svg",
+   "photos": [
+    "data/demo/veste-chic.svg"
+   ],
+   "url": "https://example.com/annonce/31",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "EuEY5HDiCgc="
+  },
+  {
+   "id": "demo:32",
+   "site": "demo",
+   "titre": "Escarpins en cuir vernis",
+   "description": "Escarpins noirs en cuir verni, talon 7 cm, semi-pointus.",
+   "prix": 52,
+   "categorie": "chaussures",
+   "marque": "Maison Éléna",
+   "etat": "bon",
+   "taille": "38",
+   "photo": "data/demo/chaussure-chic.svg",
+   "photos": [
+    "data/demo/chaussure-chic.svg"
+   ],
+   "url": "https://example.com/annonce/32",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "HBQe6G8hA/4="
+  },
+  {
+   "id": "demo:33",
+   "site": "demo",
+   "titre": "Pantalon tailleur à pinces",
+   "description": "Pantalon de tailleur gris anthracite, pinces marquées, bas à revers.",
+   "prix": 55,
+   "categorie": "pantalon",
+   "marque": "Maison Éléna",
+   "etat": "tres-bon",
+   "taille": "44",
+   "photo": "data/demo/pantalon-chic.svg",
+   "photos": [
+    "data/demo/pantalon-chic.svg",
+    "data/demo/pull-chic.svg"
+   ],
+   "url": "https://example.com/annonce/33",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "IernF3EX/vY="
+  },
+  {
+   "id": "demo:34",
+   "site": "demo",
+   "titre": "Foulard en soie imprimé",
+   "description": "Carré de soie à motif floral, ourlets roulottés à la main.",
+   "prix": 18,
+   "categorie": "echarpe",
+   "marque": "Maison Éléna",
+   "etat": "neuf",
+   "taille": "Voir description",
+   "photo": "data/demo/echarpe-chic.svg",
+   "photos": [
+    "data/demo/echarpe-chic.svg"
+   ],
+   "url": "https://example.com/annonce/34",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6eHlFXDhBAE="
+  },
+  {
+   "id": "demo:35",
+   "site": "demo",
+   "titre": "Maillot de running respirant",
+   "description": "Maillot technique léger, panneaux ajourés dans le dos.",
+   "prix": 10,
+   "categorie": "t-shirt",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "M",
+   "photo": "data/demo/tshirt-sportswear.svg",
+   "photos": [
+    "data/demo/tshirt-sportswear.svg",
+    "data/demo/pull-sportswear.svg",
+    "data/demo/sac-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/35",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "6h/hFOVw+fo="
+  },
+  {
+   "id": "demo:36",
+   "site": "demo",
+   "titre": "Jogging technique",
+   "description": "Jogging fuselé en tissu technique, poches zippées, taille élastiquée.",
+   "prix": 22,
+   "categorie": "pantalon",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "L",
+   "photo": "data/demo/pantalon-sportswear.svg",
+   "photos": [
+    "data/demo/pantalon-sportswear.svg",
+    "data/demo/pull-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/36",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "EebqIexyCQA="
+  },
+  {
+   "id": "demo:37",
+   "site": "demo",
+   "titre": "Chaussures de running",
+   "description": "Chaussures de course amorties, environ 200 km au compteur.",
+   "prix": 45,
+   "categorie": "chaussures",
+   "marque": "Sprintex",
+   "etat": "tres-bon",
+   "taille": "43 1/3",
+   "photo": "data/demo/chaussure-sportswear.svg",
+   "photos": [
+    "data/demo/chaussure-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/37",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "3xcS6xxx9wM="
+  },
+  {
+   "id": "demo:38",
+   "site": "demo",
+   "titre": "Short de sport léger",
+   "description": "Short court avec slip intégré, poche clé à l'arrière.",
+   "prix": 7,
+   "categorie": "short",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "M/L",
+   "photo": "data/demo/short-sportswear.svg",
+   "photos": [
+    "data/demo/short-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/38",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "HuPoHRRw9gE="
+  },
+  {
+   "id": "demo:39",
+   "site": "demo",
+   "titre": "Veste zippée de survêtement",
+   "description": "Veste de survêtement zippée, col montant, bandes contrastées sur les manches.",
+   "prix": 28,
+   "categorie": "veste",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "Voir description",
+   "photo": "data/demo/veste-sportswear.svg",
+   "photos": [
+    "data/demo/veste-sportswear.svg",
+    "data/demo/pull-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/39",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "5OwW5eFx/wA="
+  },
+  {
+   "id": "demo:40",
+   "site": "demo",
+   "titre": "Sac de sport 40 L",
+   "description": "Grand sac de sport avec compartiment chaussures et bandoulière réglable.",
+   "prix": 16,
+   "categorie": "sac",
+   "marque": "Sprintex",
+   "etat": "bon",
+   "taille": "Taille unique",
+   "photo": "data/demo/sac-sportswear.svg",
+   "photos": [
+    "data/demo/sac-sportswear.svg",
+    "data/demo/pull-sportswear.svg",
+    "data/demo/sac-sportswear.svg"
+   ],
+   "url": "https://example.com/annonce/40",
+   "dispo": true,
+   "vu_le": "2026-11-24T08:00:00Z",
+   "emb": "7+IRHCFxBv0="
+  }
+ ]
+}
