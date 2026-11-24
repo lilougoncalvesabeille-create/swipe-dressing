@@ -4,6 +4,7 @@ import { encoderEmb } from '../js/empreintes.js';
 import {
   ETATS, profilParDefaut, filtrer, swiper, annuler, repecher, vusIds,
   favoris, historique, empreintes, prochaines,
+  RAISONS, SEUIL_ECHAUFFEMENT, ajouterRaison, echauffementFait, garderEnTete,
 } from '../js/paquet.js';
 
 const carte = (id, extra = {}) => ({
@@ -184,4 +185,63 @@ test('swiper est idempotent : même id deux fois, tableau inchangé', () => {
   assert.equal(s2, s);
   assert.equal(s2.length, 1);
   assert.deepEqual(annuler(s2), []);
+});
+
+test('ajouterRaison : sur le dernier refus seulement, sans modifier l\'original', () => {
+  assert.deepEqual(RAISONS, ['prix', 'couleur', 'coupe', 'matiere', 'style']);
+  const cartes = quatre();
+  let s = swiper([], cartes[0], 'gauche', { maintenant: t(1) });
+  s = swiper(s, cartes[1], 'gauche', { maintenant: t(2) });
+  const avec = ajouterRaison(s, 'd:2', 'couleur');
+  assert.notEqual(avec, s);
+  assert.equal(avec.length, 2);
+  assert.equal(avec[1].raison, 'couleur');
+  assert.equal(avec[1].t, s[1].t);
+  assert.equal(avec[0], s[0]);
+  assert.equal(s[1].raison, null, 'tableau d\'origine inchangé');
+  // Changer d'avis remplace la raison.
+  assert.equal(ajouterRaison(avec, 'd:2', 'prix')[1].raison, 'prix');
+  // Pas le dernier swipe, raison inconnue, même raison : rien ne change.
+  assert.equal(ajouterRaison(s, 'd:1', 'couleur'), s);
+  assert.equal(ajouterRaison(s, 'd:2', 'odeur'), s);
+  assert.equal(ajouterRaison(avec, 'd:2', 'couleur'), avec);
+  // Après « annuler », la raison n'atterrit pas sur le swipe précédent.
+  assert.equal(ajouterRaison(annuler(s), 'd:2', 'coupe').at(-1).raison, null);
+  // Jamais sur un « j'aime », ni sur un tableau vide.
+  const aime = swiper([], cartes[2], 'droite', { maintenant: t(3) });
+  assert.equal(ajouterRaison(aime, 'd:3', 'prix'), aime);
+  assert.deepEqual(ajouterRaison([], 'd:1', 'prix'), []);
+});
+
+test('echauffementFait compte les swipes d\'échauffement', () => {
+  assert.equal(SEUIL_ECHAUFFEMENT, 15);
+  const cartes = quatre();
+  let s = swiper([], cartes[0], 'droite', { echauffement: true, maintenant: t(1) });
+  s = swiper(s, cartes[1], 'gauche', { echauffement: true, maintenant: t(2) });
+  s = swiper(s, cartes[2], 'gauche', { maintenant: t(3) });
+  assert.equal(echauffementFait([]), 0);
+  assert.equal(echauffementFait(s), 2);
+  assert.equal(echauffementFait(annuler(annuler(s))), 1);
+});
+
+test('garderEnTete : la carte visible reste devant quand la suite est recalculée', () => {
+  const entrees = quatre().map((carte) => ({ carte, voisine: false, echauffement: false }));
+  assert.deepEqual(ids(garderEnTete(entrees, 'd:3')), ['d:3', 'd:1', 'd:2', 'd:4']);
+  assert.equal(garderEnTete(entrees, 'd:1'), entrees);
+  assert.equal(garderEnTete(entrees, 'absente'), entrees);
+  assert.equal(garderEnTete(entrees, undefined), entrees);
+  assert.deepEqual(garderEnTete([], 'd:1'), []);
+  assert.deepEqual(ids(entrees), ['d:1', 'd:2', 'd:3', 'd:4'], 'original inchangé');
+});
+
+test('après annuler, la carte annulée peut être remise en tête de prochaines', () => {
+  const cartes = quatre();
+  const pile = { cartes, echauffement: [], styles: [] };
+  let s = swiper([], cartes[2], 'gauche', { maintenant: t(1) });
+  s = ajouterRaison(s, 'd:3', 'couleur');
+  const dernier = s.at(-1);
+  s = annuler(s);
+  const suite = garderEnTete(prochaines(pile, profil(), s, () => 0.5), dernier.id);
+  assert.equal(suite[0].carte.id, 'd:3');
+  assert.equal(suite.length, 4);
 });

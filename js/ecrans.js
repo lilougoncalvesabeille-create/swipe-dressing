@@ -29,7 +29,13 @@ export function el(tag, attributs = {}, ...enfants) {
 // --- Registre d'écrans ---
 
 const rendus = new Map();
+let nettoyage = null; // fonction rendue par l'écran affiché, appelée avant d'en afficher un autre
 
+/**
+ * rendu(conteneur, donnees) dessine l'écran. Il peut renvoyer une fonction de nettoyage
+ * (retrait d'écouteurs sur document/window, minuteries) : afficherEcran l'appelle
+ * avant de dessiner l'écran suivant, ou le même écran à nouveau.
+ */
 export function enregistrerEcran(nom, rendu) {
   if (typeof rendu !== 'function') throw new TypeError(`écran ${nom} : rendu attendu`);
   rendus.set(nom, rendu);
@@ -38,6 +44,15 @@ export function enregistrerEcran(nom, rendu) {
 export function afficherEcran(nom, donnees = {}) {
   const rendu = rendus.get(nom);
   if (!rendu) throw new Error(`écran inconnu : ${nom}`);
+  const precedent = nettoyage;
+  nettoyage = null;
+  if (precedent) {
+    try {
+      precedent();
+    } catch (e) {
+      console.error('Nettoyage de l’écran précédent impossible', e);
+    }
+  }
   const conteneur = document.getElementById('ecran');
   conteneur.replaceChildren();
   conteneur.dataset.ecran = nom;
@@ -46,7 +61,8 @@ export function afficherEcran(nom, donnees = {}) {
     if (bouton.dataset.ecran === nom) bouton.setAttribute('aria-current', 'page');
     else bouton.removeAttribute('aria-current');
   }
-  rendu(conteneur, donnees);
+  const retour = rendu(conteneur, donnees);
+  nettoyage = typeof retour === 'function' ? retour : null;
   window.scrollTo(0, 0);
   conteneur.querySelector('h1')?.focus({ preventScroll: true });
 }
@@ -64,8 +80,7 @@ function attente(texteTitre) {
   };
 }
 
-// Écrans d'attente : remplacés par les tâches 7 (swipe) et 8 (listes, fiche).
-enregistrerEcran('swipe', attente('Swipe'));
+// Écrans d'attente : remplacés par la tâche 8 (listes, fiche). L'écran de swipe est dans swipe-ui.js.
 enregistrerEcran('favoris', attente('Favoris'));
 enregistrerEcran('historique', attente('Historique'));
 enregistrerEcran('detail', attente('Fiche'));

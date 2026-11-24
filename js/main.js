@@ -1,10 +1,13 @@
 // Branchement de l'appli : état, sauvegarde, chargement de la pile et navigation.
 
-import { profilParDefaut } from './paquet.js';
+import {
+  profilParDefaut, prochaines, swiper, annuler, ajouterRaison, echauffementFait,
+} from './paquet.js';
 import { creerStore } from './store.js';
 import { chargerPile } from './pile.js';
 import { completerProfil } from './formulaire.js';
 import { afficherEcran, majBandeauStockage } from './ecrans.js';
+import './swipe-ui.js'; // enregistre l'écran « swipe »
 
 const CLE_PROFIL = 'sd:profil';
 const CLE_SWIPES = 'sd:swipes';
@@ -38,7 +41,9 @@ function sauverProfil() {
   majBandeau();
 }
 
-function sauverSwipes() {
+// Remplace les swipes de l'état (si `swipes` est donné) puis les enregistre.
+function sauverSwipes(swipes = etat.swipes) {
+  etat.swipes = swipes;
   store.ecrire(CLE_SWIPES, etat.swipes);
   majBandeau();
 }
@@ -65,6 +70,29 @@ function toutEffacer() {
 
 // Données propres à chaque écran, en plus de `etat` et `naviguer` communs à tous.
 const donneesPour = {
+  // La suite des cartes n'est jamais gardée en cache : elle est recalculée à chaque appel
+  // avec le profil et les swipes du moment (un changement de réglages s'applique tout de suite).
+  swipe: () => ({
+    chargee: etat.pileChargee,
+    suivantes: () => prochaines(etat.pile, etat.profil, etat.swipes, Math.random),
+    auSwipe: (entree, sens) => {
+      const swipes = swiper(etat.swipes, entree.carte, sens, { echauffement: entree.echauffement });
+      if (swipes !== etat.swipes) sauverSwipes(swipes);
+    },
+    auAnnuler: () => {
+      const dernier = etat.swipes.at(-1) ?? null;
+      if (dernier) sauverSwipes(annuler(etat.swipes));
+      return dernier;
+    },
+    auRaison: (id, raison) => {
+      const swipes = ajouterRaison(etat.swipes, id, raison);
+      if (swipes !== etat.swipes) sauverSwipes(swipes);
+    },
+    peutAnnuler: () => etat.swipes.length > 0,
+    echauffementFait: () => echauffementFait(etat.swipes),
+    vraisSwipes: () => etat.swipes.length - echauffementFait(etat.swipes),
+    auElargir: () => naviguer('reglages'),
+  }),
   questionnaire: () => ({
     profil: etat.profil,
     auValider: (profil) => {

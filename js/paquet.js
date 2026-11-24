@@ -6,7 +6,10 @@ import { decoderEmb, reclasser } from './empreintes.js';
 
 export const ETATS = ['satisfaisant', 'bon', 'tres-bon', 'neuf', 'neuf-etiquette'];
 
-const SEUIL_ECHAUFFEMENT = 15;
+export const SEUIL_ECHAUFFEMENT = 15;
+
+// Raisons de refus, dans l'ordre d'affichage des puces.
+export const RAISONS = ['prix', 'couleur', 'coupe', 'matiere', 'style'];
 
 export function profilParDefaut() {
   return {
@@ -71,6 +74,15 @@ export function swiper(swipes, carte, sens, { raison, echauffement, maintenant =
   ];
 }
 
+// Note la raison d'un refus sur le dernier swipe, seulement s'il s'agit bien de la carte `id`
+// refusée (sinon, par exemple après un « annuler », le tableau est renvoyé tel quel).
+export function ajouterRaison(swipes, id, raison) {
+  const dernier = swipes.at(-1);
+  if (!dernier || dernier.id !== id || dernier.sens !== 'gauche') return swipes;
+  if (!RAISONS.includes(raison) || dernier.raison === raison) return swipes;
+  return [...swipes.slice(0, -1), { ...dernier, raison }];
+}
+
 export function annuler(swipes) {
   return swipes.slice(0, -1);
 }
@@ -97,9 +109,22 @@ export function empreintes(swipes, sens) {
   return swipes.filter((s) => s.sens === sens).map((s) => decoderEmb(s.emb));
 }
 
+// Nombre de swipes d'échauffement faits (pour le bandeau « Échauffement : X/15 »).
+export function echauffementFait(swipes) {
+  return swipes.filter((s) => s.echauffement).length;
+}
+
+// Remet en tête l'entrée de la carte `id` si elle est encore dans la suite (ordre des autres inchangé).
+// Sert à garder la carte déjà visible au même endroit quand la suite est recalculée.
+export function garderEnTete(entrees, id) {
+  const i = entrees.findIndex((e) => e.carte.id === id);
+  if (i <= 0) return entrees;
+  return [entrees[i], ...entrees.slice(0, i), ...entrees.slice(i + 1)];
+}
+
 export function prochaines(pile, profil, swipes, rng) {
   const vus = vusIds(swipes);
-  const faits = swipes.filter((s) => s.echauffement).length;
+  const faits = echauffementFait(swipes);
   if (faits < SEUIL_ECHAUFFEMENT) {
     const restantes = (pile.echauffement ?? []).filter((c) => !vus.has(c.id));
     if (restantes.length > 0) {
