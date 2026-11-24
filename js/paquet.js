@@ -55,6 +55,7 @@ export function filtrer(cartes, profil, vus) {
 }
 
 export function swiper(swipes, carte, sens, { raison, echauffement, maintenant = new Date() } = {}) {
+  if (swipes.some((s) => s.id === carte.id)) return swipes;
   const { emb, ...sansEmb } = carte;
   return [
     ...swipes,

@@ -91,3 +91,14 @@ test('chargerPile : échec réseau sans sauvegarde, pile vide avec erreur', asyn
     assert.ok(r.erreurs.length >= 1);
   });
 });
+
+test('validerPile dédoublonne les ids (cartes, échauffement, et entre les deux)', () => {
+  const r = validerPile({
+    version: 1,
+    cartes: [carte('demo:1'), carte('demo:1'), carte('demo:2')],
+    echauffement: [carte('demo:3'), carte('demo:3'), carte('demo:2')],
+  });
+  assert.deepEqual(r.cartes.map((c) => c.id), ['demo:1', 'demo:2']);
+  assert.deepEqual(r.echauffement.map((c) => c.id), ['demo:3']);
+  assert.equal(r.erreurs.length, 3);
+});

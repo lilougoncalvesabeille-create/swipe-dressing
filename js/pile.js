@@ -27,7 +27,7 @@ function validerCarte(c) {
   return null;
 }
 
-function validerCartes(liste, erreurs, etiquette) {
+function validerCartes(liste, erreurs, etiquette, dejaVus) {
   if (liste === undefined || liste === null) return [];
   if (!Array.isArray(liste)) {
     erreurs.push(`${etiquette} : liste attendue`);
@@ -37,7 +37,11 @@ function validerCartes(liste, erreurs, etiquette) {
   for (const c of liste) {
     const erreur = validerCarte(c);
     if (erreur) erreurs.push(`${etiquette} : ${erreur}`);
-    else valides.push({ ...c, dispo: c.dispo !== false });
+    else if (dejaVus.has(c.id)) erreurs.push(`${etiquette} : carte ${c.id} en double, ignorée`);
+    else {
+      dejaVus.add(c.id);
+      valides.push({ ...c, dispo: c.dispo !== false });
+    }
   }
   return valides;
 }
@@ -58,9 +62,10 @@ export function validerPile(json) {
       }
     }
   }
+  const dejaVus = new Set();
   return {
-    cartes: validerCartes(json.cartes, erreurs, 'cartes'),
-    echauffement: validerCartes(json.echauffement, erreurs, 'échauffement'),
+    cartes: validerCartes(json.cartes, erreurs, 'cartes', dejaVus),
+    echauffement: validerCartes(json.echauffement, erreurs, 'échauffement', dejaVus),
     styles,
     erreurs,
   };

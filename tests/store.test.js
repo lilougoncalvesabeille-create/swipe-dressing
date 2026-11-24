@@ -40,3 +40,18 @@ test('JSON corrompu : renvoie le défaut', () => {
   const store = creerStore({ getItem: () => '{pas du json', setItem: () => {} });
   assert.equal(store.lire('a', 'd'), 'd');
 });
+
+test('repli mémoire : les données déjà persistées restent lisibles', () => {
+  const m = new Map([['sd:swipes', JSON.stringify([{ id: 'a' }])]]);
+  const store = creerStore({
+    getItem: (k) => m.get(k) ?? null,
+    setItem: (k, v) => {
+      if (v.length > 100) throw new Error('quota');
+      m.set(k, v);
+    },
+  });
+  assert.equal(store.ecrire('sd:pile', { gros: 'x'.repeat(200) }), false);
+  assert.equal(store.persistant, false);
+  assert.deepEqual(store.lire('sd:swipes', []), [{ id: 'a' }]);
+  assert.equal(store.lire('sd:pile').gros.length, 200);
+});

@@ -11,27 +11,26 @@ function stockageParDefaut() {
 
 export function creerStore(stockage = stockageParDefaut()) {
   const memoire = new Map();
-  let actif = stockage ?? null;
+  const disque = stockage ?? null;
+  let lectureCassee = false;
+  let ecritureCassee = false;
 
-  function basculer() {
-    actif = null;
-  }
-
-  const store = {
+  return {
     get persistant() {
-      return actif !== null;
+      return disque !== null && !lectureCassee && !ecritureCassee;
     },
 
+    // En repli, la mémoire (valeurs les plus récentes) prime, puis on relit le stockage
+    // d'origine tant qu'il répond : les données déjà enregistrées ne disparaissent pas.
     lire(cle, defaut = null) {
-      let brut = null;
-      if (actif) {
+      let brut = memoire.has(cle) ? memoire.get(cle) : null;
+      if (brut === null && disque && !lectureCassee) {
         try {
-          brut = actif.getItem(cle);
+          brut = disque.getItem(cle);
         } catch {
-          basculer();
+          lectureCassee = true;
         }
       }
-      if (!actif) brut = memoire.has(cle) ? memoire.get(cle) : null;
       if (brut === null || brut === undefined) return defaut;
       try {
         return JSON.parse(brut);
@@ -42,17 +41,16 @@ export function creerStore(stockage = stockageParDefaut()) {
 
     ecrire(cle, valeur) {
       const brut = JSON.stringify(valeur);
-      if (actif) {
+      if (this.persistant) {
         try {
-          actif.setItem(cle, brut);
+          disque.setItem(cle, brut);
           return true;
         } catch {
-          basculer();
+          ecritureCassee = true;
         }
       }
       memoire.set(cle, brut);
       return false;
     },
   };
-  return store;
 }

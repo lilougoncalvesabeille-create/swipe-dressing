@@ -105,7 +105,8 @@ test('filtres : chacun écarte la bonne carte', () => {
   assert.deepEqual(garde(carte('d:2', { dispo: false })), ['d:1']);
   const pCat = profil();
   pCat.categories = ['pull'];
-  assert.deepEqual(garde(carte('d:2', { categorie: 'jean', taille: 'W32' }), pCat), ['d:1']);
+  assert.deepEqual(garde(carte('d:2', { categorie: 'sac', taille: 'U' })), ['d:1', 'd:2']);
+  assert.deepEqual(garde(carte('d:2', { categorie: 'sac', taille: 'U' }), pCat), ['d:1']);
   const pBudget = profil();
   pBudget.budget.parCategorie = { pull: 10 };
   assert.deepEqual(garde(carte('d:2', { prix: 15 }), pBudget), []);
@@ -174,4 +175,13 @@ test("listes et empreintes : favoris/historique sans échauffement, récents d'a
   assert.ok(aimes[0] instanceof Float32Array);
   assert.equal(empreintes(s, 'gauche').length, 1);
   assert.deepEqual([...vusIds(s)].sort(), ['d:1', 'd:2', 'd:3', 'd:4']);
+});
+
+test('swiper est idempotent : même id deux fois, tableau inchangé', () => {
+  const c = carte('d:1');
+  const s = swiper([], c, 'gauche', { maintenant: t(1) });
+  const s2 = swiper(s, c, 'droite', { maintenant: t(2) });
+  assert.equal(s2, s);
+  assert.equal(s2.length, 1);
+  assert.deepEqual(annuler(s2), []);
 });
