@@ -7,6 +7,7 @@ import { creerStore } from './store.js';
 import { chargerPile } from './pile.js';
 import { completerProfil } from './formulaire.js';
 import { afficherEcran, majBandeauStockage } from './ecrans.js';
+import { enregistrerServiceWorker } from './hors-connexion.js';
 import './swipe-ui.js'; // enregistre l'écran « swipe »
 import './listes-ui.js'; // enregistre les écrans « favoris », « historique » et « detail »
 
@@ -217,3 +218,4 @@ async function demarrer() {
 }
 
 demarrer();
+enregistrerServiceWorker();
