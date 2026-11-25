@@ -120,3 +120,24 @@ test('chaque catégorie connue a un libellé', () => {
   assert.deepEqual(CATEGORIES_LISTE.map((c) => c.valeur), Object.keys(CATEGORIES));
   for (const c of CATEGORIES_LISTE) assert.ok(c.libelle.length > 0);
 });
+
+test('budget par catégorie : lecture (vide = clé retirée, invalide = ignoré) et écriture', () => {
+  const base = profilParDefaut();
+  base.budget.parCategorie = { pull: 30, robe: 80 };
+  const p = lireFormulaire({
+    'budget-pull': '', 'budget-robe': 'abc', 'budget-sac': ' 45 ', 'budget-jean': '0', 'budget-inconnue': '12',
+  }, base);
+  assert.deepEqual(p.budget.parCategorie, { robe: 80, sac: 45 });
+  assert.deepEqual(base.budget.parCategorie, { pull: 30, robe: 80 });
+  const v = valeursDepuisProfil(p);
+  assert.equal(v['budget-sac'], '45');
+  assert.equal(v['budget-robe'], '80');
+  assert.equal(v['budget-pull'], '');
+  for (const cat of Object.keys(CATEGORIES)) assert.ok(Object.hasOwn(v, `budget-${cat}`), cat);
+  assert.deepEqual(lireFormulaire(v, p).budget.parCategorie, { robe: 80, sac: 45 });
+});
+
+test('completerProfil : budget par catégorie lu du stockage, valeurs invalides écartées', () => {
+  const p = completerProfil({ budget: { max: 50, parCategorie: { pull: 20, robe: '30', truc: 10, sac: -5 } } });
+  assert.deepEqual(p.budget.parCategorie, { pull: 20 });
+});

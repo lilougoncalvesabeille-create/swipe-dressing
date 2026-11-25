@@ -97,6 +97,20 @@ export function listeMarques(texte) {
 const estObjet = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const parmi = (valeur, liste) => liste.some((x) => x.valeur === valeur);
 
+// Nom du champ « budget pour une catégorie » (réglages).
+export const champBudget = (categorie) => `budget-${categorie}`;
+
+// Budgets par catégorie lus du stockage : seulement des catégories connues et des montants valides.
+function budgetsValides(parCategorie) {
+  if (!estObjet(parCategorie)) return {};
+  const propres = {};
+  for (const [categorie, montant] of Object.entries(parCategorie)) {
+    if (!(categorie in CATEGORIES) || typeof montant !== 'number') continue;
+    if (lireNombre(montant, { min: BORNES.budget.min, max: BORNES.budget.max }) !== null) propres[categorie] = montant;
+  }
+  return propres;
+}
+
 // Profil lu dans le stockage → profil complet (champs manquants remplis par les défauts).
 export function completerProfil(lu) {
   const d = profilParDefaut();
@@ -113,7 +127,7 @@ export function completerProfil(lu) {
     },
     budget: {
       max: typeof b.max === 'number' ? b.max : d.budget.max,
-      parCategorie: estObjet(b.parCategorie) ? { ...b.parCategorie } : {},
+      parCategorie: budgetsValides(b.parCategorie),
     },
     categories: Array.isArray(lu.categories) ? [...lu.categories] : [],
     marquesPreferees: Array.isArray(lu.marquesPreferees) ? [...lu.marquesPreferees] : [],
@@ -144,6 +158,8 @@ export function valeursDepuisProfil(profil) {
     pays: p.pays,
     region: p.region,
     budget: texteDe(p.budget.max),
+    ...Object.fromEntries(Object.keys(CATEGORIES)
+      .map((c) => [champBudget(c), texteDe(p.budget.parCategorie[c])])),
     categories: [...p.categories],
     'etat-min': p.etatMin,
     'marques-preferees': p.marquesPreferees.join(', '),
@@ -188,6 +204,17 @@ export function lireFormulaire(valeurs, base = profilParDefaut()) {
   if (a('budget')) {
     const max = lireNombre(v.budget, { min: BORNES.budget.min, max: BORNES.budget.max });
     if (max !== null) p.budget.max = max;
+  }
+  // Budget par catégorie : vide = budget global (clé retirée), invalide = valeur précédente gardée.
+  for (const categorie of Object.keys(CATEGORIES)) {
+    const nom = champBudget(categorie);
+    if (!a(nom)) continue;
+    if (String(v[nom] ?? '').trim() === '') {
+      delete p.budget.parCategorie[categorie];
+      continue;
+    }
+    const montant = lireNombre(v[nom], { min: BORNES.budget.min, max: BORNES.budget.max });
+    if (montant !== null) p.budget.parCategorie[categorie] = montant;
   }
 
   if (a('categories')) {

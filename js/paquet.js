@@ -40,6 +40,13 @@ export function profilParDefaut() {
   };
 }
 
+// Une carte est montrée si le profil prend les deux rayons, si la carte est mixte ou sans rayon,
+// ou si son rayon est celui du profil.
+export function rayonCompatible(carte, profil) {
+  if (profil.rayon !== 'homme' && profil.rayon !== 'femme') return true;
+  return !carte.rayon || carte.rayon === 'mixte' || carte.rayon === profil.rayon;
+}
+
 export function filtrer(cartes, profil, vus) {
   const bannies = new Set((profil.marquesBannies ?? []).map((m) => String(m).toLowerCase()));
   const rangMin = ETATS.indexOf(profil.etatMin);
@@ -47,6 +54,7 @@ export function filtrer(cartes, profil, vus) {
   for (const carte of cartes) {
     if (vus.has(carte.id)) continue;
     if (carte.dispo === false) continue;
+    if (!rayonCompatible(carte, profil)) continue;
     const plafond = profil.budget.parCategorie?.[carte.categorie] ?? profil.budget.max;
     if (!(carte.prix <= plafond)) continue;
     if (carte.marque && bannies.has(String(carte.marque).toLowerCase())) continue;
@@ -95,8 +103,61 @@ export function annuler(swipes) {
   return swipes.slice(0, -1);
 }
 
-export function repecher(swipes, id) {
-  return swipes.map((s) => (s.id === id ? { ...s, sens: 'droite', repeche: true } : s));
+// La carte garde sa place dans le tableau (annuler inchangé) ; `repeche_le` la met en tête des favoris.
+export function repecher(swipes, id, { maintenant = new Date() } = {}) {
+  return swipes.map((s) => (s.id === id
+    ? { ...s, sens: 'droite', repeche: true, repeche_le: maintenant.toISOString() }
+    : s));
+}
+
+const SENS = ['droite', 'gauche'];
+const swipeValide = (s) => s !== null && typeof s === 'object' && !Array.isArray(s)
+  && typeof s.id === 'string' && s.id.length > 0 && SENS.includes(s.sens);
+
+// Swipes lus dans le stockage → seulement les entrées bien formées (objet, id texte, sens connu),
+// sans doublon d'id (la première est gardée). Renvoie le même tableau s'il est déjà propre.
+export function nettoyerSwipes(lus) {
+  if (!Array.isArray(lus)) return [];
+  const vus = new Set();
+  const propres = lus.filter((s) => {
+    if (!swipeValide(s) || vus.has(s.id)) return false;
+    vus.add(s.id);
+    return true;
+  });
+  return propres.length === lus.length ? lus : propres;
+}
+
+/**
+ * Fusionne les swipes du stockage (écrits peut-être par une autre copie ouverte de l'appli)
+ * avec ceux de cette copie, avant de les réécrire.
+ * - union par id : l'ordre du stockage d'abord, puis les swipes présents seulement ici ;
+ * - pour un id présent des deux côtés, le stockage gagne, sauf si cette copie l'a changé
+ *   volontairement depuis sa dernière lecture ou écriture (`modifies` : swipe, raison, repêche) ;
+ * - un id retiré ici par « annuler » (`supprimes`) disparaît aussi du stockage.
+ */
+export function fusionnerSwipes(stockes, memoire, { supprimes = new Set(), modifies = new Set() } = {}) {
+  const ici = new Map(memoire.map((s) => [s.id, s]));
+  const resultat = [];
+  const pris = new Set();
+  for (const s of Array.isArray(stockes) ? stockes : []) {
+    if (pris.has(s.id) || supprimes.has(s.id)) continue;
+    pris.add(s.id);
+    resultat.push(modifies.has(s.id) && ici.has(s.id) ? ici.get(s.id) : s);
+  }
+  for (const s of memoire) {
+    if (pris.has(s.id) || supprimes.has(s.id)) continue;
+    pris.add(s.id);
+    resultat.push(s);
+  }
+  return resultat;
+}
+
+// Quand une vraie pile (source autre que « demo ») est chargée, les swipes des cartes de démo
+// (ids « demo:… ») sont oubliés. Sans source connue (pile indisponible), rien n'est retiré.
+export function oublierDemo(swipes, source) {
+  if (typeof source !== 'string' || !source || source === 'demo') return swipes;
+  const restants = swipes.filter((s) => !String(s.id).startsWith('demo:'));
+  return restants.length === swipes.length ? swipes : restants;
 }
 
 export function vusIds(swipes) {
@@ -105,8 +166,12 @@ export function vusIds(swipes) {
 
 const recents = (liste) => [...liste].reverse();
 
+// Les plus récents d'abord ; une carte repêchée compte à la date du repêchage.
+const dateFavori = (s) => String(s.repeche_le ?? s.t ?? '');
+
 export function favoris(swipes) {
-  return recents(swipes.filter((s) => s.sens === 'droite' && !s.echauffement));
+  return recents(swipes.filter((s) => s.sens === 'droite' && !s.echauffement))
+    .sort((a, b) => (dateFavori(a) < dateFavori(b) ? 1 : dateFavori(a) > dateFavori(b) ? -1 : 0));
 }
 
 export function historique(swipes) {
@@ -134,7 +199,7 @@ export function prochaines(pile, profil, swipes, rng) {
   const vus = vusIds(swipes);
   const faits = echauffementFait(swipes);
   if (faits < SEUIL_ECHAUFFEMENT) {
-    const restantes = (pile.echauffement ?? []).filter((c) => !vus.has(c.id));
+    const restantes = (pile.echauffement ?? []).filter((c) => !vus.has(c.id) && rayonCompatible(c, profil));
     if (restantes.length > 0) {
       return restantes.map((carte) => ({ carte, voisine: false, echauffement: true }));
     }

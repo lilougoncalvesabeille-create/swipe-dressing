@@ -5,6 +5,7 @@ import {
   ETATS, profilParDefaut, filtrer, swiper, annuler, repecher, vusIds,
   favoris, historique, empreintes, prochaines,
   RAISONS, SEUIL_ECHAUFFEMENT, ajouterRaison, echauffementFait, garderEnTete,
+  fusionnerSwipes, nettoyerSwipes, oublierDemo,
 } from '../js/paquet.js';
 
 const carte = (id, extra = {}) => ({
@@ -244,4 +245,117 @@ test('après annuler, la carte annulée peut être remise en tête de prochaines
   const suite = garderEnTete(prochaines(pile, profil(), s, () => 0.5), dernier.id);
   assert.equal(suite[0].carte.id, 'd:3');
   assert.equal(suite.length, 4);
+});
+
+// --- Fusion des swipes entre deux copies ouvertes de l'appli ---
+
+const rec = (id, extra = {}) => ({ id, sens: 'droite', raison: null, echauffement: false, t: 'x', carte: {}, emb: 'AA==', ...extra });
+
+test('fusionnerSwipes : union par id, ordre du stockage puis nouveautés de la mémoire', () => {
+  const stockes = [rec('a'), rec('b'), rec('autre')];
+  const memoire = [rec('a'), rec('b'), rec('c')];
+  const r = fusionnerSwipes(stockes, memoire, { modifies: new Set(['c']) });
+  assert.deepEqual(r.map((s) => s.id), ['a', 'b', 'autre', 'c']);
+});
+
+test('fusionnerSwipes : le stockage gagne, sauf pour un changement voulu de cette session', () => {
+  const stockes = [rec('a', { sens: 'droite', repeche: true }), rec('b', { sens: 'gauche' })];
+  const memoire = [rec('a', { sens: 'gauche' }), rec('b', { sens: 'gauche', raison: 'prix' })];
+  const r = fusionnerSwipes(stockes, memoire, { modifies: new Set(['b']) });
+  assert.equal(r[0].sens, 'droite');
+  assert.equal(r[0].repeche, true);
+  assert.equal(r[1].raison, 'prix');
+  assert.deepEqual(r.map((s) => s.id), ['a', 'b']);
+});
+
+test('fusionnerSwipes : un id retiré par « annuler » dans cette session ne revient pas', () => {
+  const stockes = [rec('a'), rec('b'), rec('c')];
+  const memoire = [rec('a'), rec('b')];
+  const r = fusionnerSwipes(stockes, memoire, { supprimes: new Set(['c']) });
+  assert.deepEqual(r.map((s) => s.id), ['a', 'b']);
+});
+
+test('fusionnerSwipes : copie périmée — les swipes plus récents du stockage sont gardés', () => {
+  const stockes = [rec('a'), rec('b'), rec('c'), rec('d')];
+  const perimee = [rec('a'), rec('e')];
+  const r = fusionnerSwipes(stockes, perimee, { modifies: new Set(['e']) });
+  assert.deepEqual(r.map((s) => s.id), ['a', 'b', 'c', 'd', 'e']);
+});
+
+test('fusionnerSwipes : sans options, stockage vide ou illisible, jamais de doublon', () => {
+  assert.deepEqual(fusionnerSwipes([], [rec('a')]).map((s) => s.id), ['a']);
+  assert.deepEqual(fusionnerSwipes(null, [rec('a')]).map((s) => s.id), ['a']);
+  assert.deepEqual(fusionnerSwipes([rec('a'), rec('a')], [rec('a')]).map((s) => s.id), ['a']);
+  const stockes = [rec('a')];
+  assert.equal(fusionnerSwipes(stockes, [rec('a')], {})[0], stockes[0]);
+  assert.equal(fusionnerSwipes(stockes, [rec('a')])[0], stockes[0]);
+});
+
+// --- Nettoyage des swipes lus ---
+
+test('nettoyerSwipes : écarte les entrées mal formées sans planter', () => {
+  const lus = [
+    rec('a'), null, 3, 'texte', [], { sens: 'droite' }, { id: 4, sens: 'droite' }, { id: '', sens: 'gauche' },
+    rec('b', { sens: 'haut' }), rec('c', { sens: 'gauche' }), rec('a', { sens: 'gauche' }),
+  ];
+  assert.deepEqual(nettoyerSwipes(lus).map((s) => s.id), ['a', 'c']);
+  assert.equal(nettoyerSwipes(lus)[0].sens, 'droite');
+  assert.deepEqual(nettoyerSwipes(null), []);
+  assert.deepEqual(nettoyerSwipes({ id: 'a' }), []);
+  const propres = [rec('a')];
+  assert.equal(nettoyerSwipes(propres), propres);
+});
+
+// --- Swipes de la démo quand une vraie pile arrive ---
+
+test('oublierDemo : retire les swipes demo: seulement si la pile ne vient pas de la démo', () => {
+  const s = [rec('demo:1'), rec('vinted:2'), rec('demo:e3')];
+  assert.equal(oublierDemo(s, 'demo'), s);
+  assert.equal(oublierDemo(s, null), s);
+  assert.equal(oublierDemo(s, undefined), s);
+  assert.deepEqual(oublierDemo(s, 'pc').map((x) => x.id), ['vinted:2']);
+  const sansDemo = [rec('vinted:2')];
+  assert.equal(oublierDemo(sansDemo, 'actions'), sansDemo);
+});
+
+// --- Repêcher : en tête des favoris ---
+
+test('repecher note repeche_le ; la carte repêchée passe en tête des favoris, à la même place dans le tableau', () => {
+  const cartes = quatre();
+  let s = swiper([], cartes[0], 'gauche', { maintenant: t(1) });
+  s = swiper(s, cartes[1], 'droite', { maintenant: t(2) });
+  s = swiper(s, cartes[2], 'droite', { maintenant: t(3) });
+  const r = repecher(s, 'd:1', { maintenant: t(10) });
+  assert.equal(r[0].repeche_le, t(10).toISOString());
+  assert.deepEqual(r.map((x) => x.id), ['d:1', 'd:2', 'd:3']);
+  assert.deepEqual(favoris(r).map((x) => x.id), ['d:1', 'd:3', 'd:2']);
+  assert.deepEqual(annuler(r).map((x) => x.id), ['d:1', 'd:2']);
+});
+
+// --- Rayon ---
+
+test('filtrer : rayon homme/femme, les-deux, carte mixte ou sans rayon', () => {
+  const cartes = [
+    carte('d:1', { rayon: 'homme' }), carte('d:2', { rayon: 'femme' }),
+    carte('d:3', { rayon: 'mixte' }), carte('d:4'), carte('d:5', { rayon: null }),
+  ];
+  const avec = (rayon) => {
+    const p = profil();
+    p.rayon = rayon;
+    return ids(filtrer(cartes, p, new Set()));
+  };
+  assert.deepEqual(avec('homme'), ['d:1', 'd:3', 'd:4', 'd:5']);
+  assert.deepEqual(avec('femme'), ['d:2', 'd:3', 'd:4', 'd:5']);
+  assert.deepEqual(avec('les-deux'), ['d:1', 'd:2', 'd:3', 'd:4', 'd:5']);
+  assert.deepEqual(avec(undefined), ['d:1', 'd:2', 'd:3', 'd:4', 'd:5']);
+});
+
+test("prochaines : l'échauffement respecte aussi le rayon", () => {
+  const pile = {
+    echauffement: [carte('e:1', { rayon: 'femme' }), carte('e:2', { rayon: 'mixte' }), carte('e:3', { rayon: 'homme' })],
+    cartes: [],
+  };
+  const p = profil();
+  p.rayon = 'homme';
+  assert.deepEqual(ids(prochaines(pile, p, [], () => 0.3)), ['e:2', 'e:3']);
 });
