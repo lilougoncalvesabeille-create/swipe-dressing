@@ -1,7 +1,7 @@
 // Service worker de Swipe Dressing : l'appli reste utilisable hors connexion.
 // VERSION est changée automatiquement par deploy.ps1 à chaque mise en ligne :
 // c'est ce changement qui fait récupérer la mise à jour aux téléphones.
-const VERSION = 'swipe-dressing-20261124-000000';
+const VERSION = 'swipe-dressing-20261125-131147';
 const PREFIXE = 'swipe-dressing-';
 
 // Coquille de l'appli : servie depuis le cache d'abord.
