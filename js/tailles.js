@@ -27,10 +27,12 @@ function rangLettre(texte) {
 
 function lirePointures(brute) {
   const lectures = [];
-  for (const m of brute.matchAll(/(?<!\d)(\d{2})(?:\s*([.,]\d+)|\s+([12])\/3)?(?!\d)/g)) {
-    let valeur = Number(m[1]);
-    if (m[2]) valeur += Number(m[2].replace(',', '.'));
-    else if (m[3]) valeur += Number(m[3]) / 3;
+  // `(^|\D)` plutôt qu'un lookbehind (« pas précédé d'un chiffre ») : iOS Safari avant 16.4
+  // refuse les lookbehind et l'appli entière ne démarrerait pas.
+  for (const m of brute.matchAll(/(^|\D)(\d{2})(?:\s*([.,]\d+)|\s+([12])\/3)?(?!\d)/g)) {
+    let valeur = Number(m[2]);
+    if (m[3]) valeur += Number(m[3].replace(',', '.'));
+    else if (m[4]) valeur += Number(m[4]) / 3;
     if (valeur >= 16 && valeur <= 55) lectures.push({ systeme: 'pointure', valeur });
   }
   return lectures;

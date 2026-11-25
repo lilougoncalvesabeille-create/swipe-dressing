@@ -147,3 +147,50 @@ test('validerPile expose la source de la pile', () => {
   assert.equal(validerPile({ version: 1, cartes: [] }).source, null);
   assert.equal(validerPile(null).source, null);
 });
+
+// --- Pile vide, source distante (dépôt privé) ---
+
+test('chargerPile : une pile sans carte valide n\'écrase pas sd:pile (la sauvegarde est gardée)', async () => {
+  const store = creerStore(stockageMemoire());
+  const sauvegarde = { version: 1, source: 'pc', styles: [], cartes: [carte('vinted:1')] };
+  store.ecrire('sd:pile', sauvegarde);
+  for (const vide of [{ version: 1, cartes: [] }, { version: 1, cartes: [carte('vinted:2', { emb: '***' })] }]) {
+    await avecFetch(async () => ({ ok: true, json: async () => vide }), async () => {
+      const r = await chargerPile('x.json', store);
+      assert.deepEqual(r.cartes.map((c) => c.id), ['vinted:1']);
+    });
+    assert.deepEqual(store.lire('sd:pile', null), sauvegarde);
+  }
+});
+
+test('chargerPile : une pile vide sans sauvegarde est rendue telle quelle, sans être enregistrée', async () => {
+  const store = creerStore(stockageMemoire());
+  await avecFetch(async () => ({ ok: true, json: async () => ({ version: 1, source: 'pc', cartes: [] }) }), async () => {
+    const r = await chargerPile('x.json', store);
+    assert.deepEqual(r.cartes, []);
+    assert.equal(r.source, 'pc');
+  });
+  assert.equal(store.lire('sd:pile', null), null);
+  // Une pile qui n'a que de l'échauffement est bien enregistrée.
+  const echauffement = { version: 1, source: 'pc', cartes: [], echauffement: [carte('vinted:e')] };
+  await avecFetch(async () => ({ ok: true, json: async () => echauffement }), () => chargerPile('x.json', store));
+  assert.deepEqual(store.lire('sd:pile', null), echauffement);
+});
+
+test('chargerPile : source fonction (dépôt privé), repli sur sd:pile mais jamais sur la démo', async () => {
+  const store = creerStore(stockageMemoire());
+  const pc = { version: 1, source: 'pc', genere_le: '2026-11-25T10:00:00Z', cartes: [carte('vinted:1')] };
+  const r = await chargerPile(async () => pc, store, { sansDemo: true });
+  assert.equal(r.cartes[0].id, 'vinted:1');
+  assert.equal(r.genere_le, '2026-11-25T10:00:00Z');
+  assert.deepEqual(store.lire('sd:pile', null), pc);
+  const horsLigne = async () => { throw new Error('GitHub injoignable'); };
+  assert.equal((await chargerPile(horsLigne, store, { sansDemo: true })).cartes[0].id, 'vinted:1');
+  store.ecrire('sd:pile', { version: 1, source: 'demo', cartes: [carte('demo:1')] });
+  const r2 = await chargerPile(horsLigne, store, { sansDemo: true });
+  assert.deepEqual(r2.cartes, []);
+  assert.match(r2.erreurs[0], /GitHub injoignable/);
+  // Une pile de démo reçue n'est pas non plus acceptée en mode dépôt privé.
+  const r3 = await chargerPile(async () => ({ version: 1, source: 'demo', cartes: [carte('demo:1')] }), store, { sansDemo: true });
+  assert.deepEqual(r3.cartes, []);
+});

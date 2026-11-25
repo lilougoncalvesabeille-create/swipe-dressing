@@ -2,7 +2,7 @@
 // Module pur (sans DOM) : tout est fonction des données reçues, aucun état caché.
 
 import { compatibilite } from './tailles.js';
-import { decoderEmb, reclasser } from './empreintes.js';
+import { empreinteDe, reclasser } from './empreintes.js';
 
 export const ETATS = ['satisfaisant', 'bon', 'tres-bon', 'neuf', 'neuf-etiquette'];
 
@@ -64,7 +64,7 @@ export function filtrer(cartes, profil, vus) {
     if (compat === null) continue;
     let emb;
     try {
-      emb = decoderEmb(carte.emb);
+      emb = empreinteDe(carte.id, carte.emb);
     } catch {
       continue;
     }
@@ -111,20 +111,75 @@ export function repecher(swipes, id, { maintenant = new Date() } = {}) {
 }
 
 const SENS = ['droite', 'gauche'];
-const swipeValide = (s) => s !== null && typeof s === 'object' && !Array.isArray(s)
+const swipeBienForme = (s) => s !== null && typeof s === 'object' && !Array.isArray(s)
   && typeof s.id === 'string' && s.id.length > 0 && SENS.includes(s.sens);
 
+// Swipe valide : objet, id texte, sens connu, empreinte absente (swipe compacté ou venu d'ailleurs)
+// ou en texte (base64).
+export const swipeValide = (s) => swipeBienForme(s) && (s.emb === undefined || typeof s.emb === 'string');
+
 // Swipes lus dans le stockage → seulement les entrées bien formées (objet, id texte, sens connu),
-// sans doublon d'id (la première est gardée). Renvoie le même tableau s'il est déjà propre.
+// sans doublon d'id (la première est gardée). Un swipe dont seule l'empreinte est abîmée est
+// gardé sans elle : son id reste « vu », la carte n'est jamais remontrée.
+// Renvoie le même tableau s'il est déjà propre.
 export function nettoyerSwipes(lus) {
   if (!Array.isArray(lus)) return [];
   const vus = new Set();
-  const propres = lus.filter((s) => {
-    if (!swipeValide(s) || vus.has(s.id)) return false;
+  let change = false;
+  const propres = [];
+  for (const s of lus) {
+    if (!swipeBienForme(s) || vus.has(s.id)) {
+      change = true;
+      continue;
+    }
     vus.add(s.id);
-    return true;
+    if (swipeValide(s)) {
+      propres.push(s);
+    } else {
+      const { emb, ...sansEmb } = s;
+      propres.push(sansEmb);
+      change = true;
+    }
+  }
+  return change ? propres : lus;
+}
+
+// --- Compactage du stockage (objectif : sd:swipes sous 2 Mo) ---
+
+// Les refus plus anciens que les GARDER_CARTES swipes les plus récents perdent leur carte et leur
+// empreinte ; tout swipe plus ancien que les GARDER_EMPREINTES plus récents perd son empreinte.
+// Les favoris gardent toujours leur carte (écran Favoris).
+export const GARDER_CARTES = 300;
+export const GARDER_EMPREINTES = 600;
+const CHAMPS_REFUS_COMPACT = ['id', 'sens', 't', 'raison', 'echauffement'];
+
+function refusCompact(s) {
+  // La marque d'échauffement est gardée : sinon le compte « Échauffement : X/15 » baisserait.
+  const r = { id: s.id, sens: s.sens, t: s.t, raison: s.raison ?? null };
+  if (s.echauffement) r.echauffement = true;
+  return r;
+}
+
+const dejaCompact = (s) => Object.keys(s).every((k) => CHAMPS_REFUS_COMPACT.includes(k))
+  && 'raison' in s && s.echauffement !== false;
+
+/** Renvoie les swipes compactés (même ordre, mêmes ids), ou le même tableau s'il n'y a rien à faire. */
+export function compacterSwipes(swipes) {
+  const n = swipes.length;
+  if (n <= GARDER_CARTES) return swipes;
+  let change = false;
+  const resultat = swipes.map((s, i) => {
+    const rang = n - 1 - i; // 0 : le plus récent
+    let r = s;
+    if (rang >= GARDER_CARTES && s.sens === 'gauche' && !dejaCompact(s)) r = refusCompact(s);
+    if (rang >= GARDER_EMPREINTES && 'emb' in r) {
+      const { emb, ...sansEmb } = r;
+      r = sansEmb;
+    }
+    if (r !== s) change = true;
+    return r;
   });
-  return propres.length === lus.length ? lus : propres;
+  return change ? resultat : swipes;
 }
 
 /**
@@ -169,17 +224,55 @@ const recents = (liste) => [...liste].reverse();
 // Les plus récents d'abord ; une carte repêchée compte à la date du repêchage.
 const dateFavori = (s) => String(s.repeche_le ?? s.t ?? '');
 
+// Seuls les swipes qui ont encore leur carte sont listés (un refus compacté, ou un swipe fait sur
+// un autre appareil et reçu sans carte, compte comme vu mais ne s'affiche pas).
 export function favoris(swipes) {
-  return recents(swipes.filter((s) => s.sens === 'droite' && !s.echauffement))
+  return recents(swipes.filter((s) => s.sens === 'droite' && !s.echauffement && s.carte))
     .sort((a, b) => (dateFavori(a) < dateFavori(b) ? 1 : dateFavori(a) > dateFavori(b) ? -1 : 0));
 }
 
 export function historique(swipes) {
-  return recents(swipes.filter((s) => !s.echauffement));
+  return recents(swipes.filter((s) => !s.echauffement && s.carte));
 }
 
+// Empreintes des swipes d'un sens (pour le classement) ; un swipe sans empreinte lisible est ignoré.
 export function empreintes(swipes, sens) {
-  return swipes.filter((s) => s.sens === sens).map((s) => decoderEmb(s.emb));
+  const resultat = [];
+  for (const s of swipes) {
+    if (s.sens !== sens || typeof s.emb !== 'string') continue;
+    try {
+      resultat.push(empreinteDe(s.id, s.emb));
+    } catch {
+      // Empreinte abîmée : ce swipe ne compte pas dans le classement.
+    }
+  }
+  return resultat;
+}
+
+/**
+ * Met à jour « Plus dispo » des favoris d'après annonces-etat.json du dépôt privé
+ * (`{ "<id>": {"dispo": bool, "verifie_le": ISO} }`). Renvoie {swipes, modifies}
+ * (le même tableau si rien ne change).
+ */
+export function majDispoFavoris(swipes, etats) {
+  if (!etats || typeof etats !== 'object') return { swipes, modifies: [] };
+  const modifies = [];
+  const resultat = swipes.map((s) => {
+    const etat = Object.hasOwn(etats, s.id) ? etats[s.id] : null;
+    if (s.sens !== 'droite' || !s.carte || typeof etat?.dispo !== 'boolean' || s.carte.dispo === etat.dispo) return s;
+    modifies.push(s.id);
+    return { ...s, carte: { ...s.carte, dispo: etat.dispo } };
+  });
+  return modifies.length > 0 ? { swipes: resultat, modifies } : { swipes, modifies };
+}
+
+// Pile sans les cartes dont l'id est dans `ids` (le même objet si aucune n'est retirée).
+export function retirerIds(pile, ids) {
+  const garder = (c) => !ids.has(c.id);
+  const cartes = pile.cartes ?? [];
+  const echauffement = pile.echauffement ?? [];
+  if (cartes.every(garder) && echauffement.every(garder)) return pile;
+  return { ...pile, cartes: cartes.filter(garder), echauffement: echauffement.filter(garder) };
 }
 
 // Nombre de swipes d'échauffement faits (pour le bandeau « Échauffement : X/15 »).

@@ -27,6 +27,7 @@ const COQUILLE = [
   'js/pile.js',
   'js/store.js',
   'js/swipe-ui.js',
+  'js/synchro.js',
   'js/tailles.js',
   // Photos de la démonstration
   'data/demo/bonnet-workwear.svg',

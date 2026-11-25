@@ -56,9 +56,23 @@ export function creerStore(stockage = stockageParDefaut(), { critiques = null } 
     return false;
   }
 
+  // Retire une clé (mémoire et stockage). Renvoie false si le stockage a refusé.
+  function effacer(cle) {
+    memoire.delete(cle);
+    enEchec.delete(cle);
+    if (!disque || lectureCassee) return true;
+    try {
+      disque.removeItem(cle);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   return {
     lire,
     ecrire,
+    effacer,
     get persistant() {
       return disque !== null && !lectureCassee && ![...enEchec].some(critique);
     },

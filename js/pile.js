@@ -80,7 +80,9 @@ function dimensionMajoritaire(dims) {
 export function validerPile(json) {
   const erreurs = [];
   if (!json || typeof json !== 'object' || Array.isArray(json)) {
-    return { cartes: [], echauffement: [], styles: [], erreurs: ['pile illisible : objet attendu'], source: null };
+    return {
+      cartes: [], echauffement: [], styles: [], erreurs: ['pile illisible : objet attendu'], source: null, genere_le: null,
+    };
   }
   const stylesLus = [];
   if (Array.isArray(json.styles)) {
@@ -113,25 +115,57 @@ export function validerPile(json) {
     styles,
     erreurs,
     source: texte(json.source) ? json.source : null,
+    genere_le: texte(json.genere_le) ? json.genere_le : null,
   };
 }
 
-export async function chargerPile(url = 'data/demo-pile.json', store) {
+// Une pile sert à quelque chose si elle a au moins une carte ou une carte d'échauffement valide.
+const utilisable = (r) => r.cartes.length > 0 || r.echauffement.length > 0;
+
+function pileRefusee(message) {
+  const r = validerPile(null);
+  r.erreurs = [message];
+  return r;
+}
+
+/**
+ * Charge la pile et en garde une copie (JSON brut) sous `sd:pile` pour le hors connexion.
+ * `source` : URL de la pile (démo), ou fonction asynchrone qui renvoie le JSON (dépôt privé).
+ * - réseau en échec : la sauvegarde est relue ;
+ * - pile reçue sans aucune carte valide : elle n'écrase pas la sauvegarde, qui sert si elle existe ;
+ * - `sansDemo` (mode dépôt privé) : une pile de démonstration (reçue ou sauvegardée) est refusée.
+ */
+export async function chargerPile(source = 'data/demo-pile.json', store, { sansDemo = false } = {}) {
+  const lireSource = typeof source === 'function' ? source : async () => {
+    const reponse = await fetch(source);
+    if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+    return reponse.json();
+  };
+  const acceptee = (r) => !(sansDemo && r.source === 'demo');
+  const sauvegarde = () => {
+    const brute = store?.lire(CLE_PILE, null) ?? null;
+    if (!brute) return null;
+    const r = validerPile(brute);
+    return acceptee(r) && utilisable(r) ? r : null;
+  };
   let json;
   try {
-    const reponse = await fetch(url);
-    if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
-    json = await reponse.json();
+    json = await lireSource();
   } catch (e) {
-    const sauvegarde = store?.lire(CLE_PILE, null) ?? null;
-    if (!sauvegarde) {
-      const r = validerPile(null);
-      r.erreurs = [`pile indisponible (${e.message}) et aucune sauvegarde`];
-      return r;
-    }
-    return validerPile(sauvegarde);
+    return sauvegarde() ?? pileRefusee(`pile indisponible (${e.message}) et aucune sauvegarde`);
   }
   const resultat = validerPile(json);
+  if (!acceptee(resultat)) {
+    return sauvegarde() ?? pileRefusee('pile de démonstration refusée : la pile doit venir du PC');
+  }
+  if (!utilisable(resultat)) {
+    const gardee = sauvegarde();
+    if (gardee) {
+      gardee.erreurs.push('pile reçue sans carte valide : la pile précédente est gardée', ...resultat.erreurs);
+      return gardee;
+    }
+    return resultat;
+  }
   store?.ecrire(CLE_PILE, json);
   return resultat;
 }

@@ -114,3 +114,16 @@ test('clés critiques : stockage absent ou illisible reste non persistant', () =
   casse.lire('sd:pile');
   assert.equal(casse.persistant, false);
 });
+
+test('effacer retire la clé du stockage et de la mémoire', () => {
+  const m = new Map();
+  const store = creerStore({ getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v), removeItem: (k) => m.delete(k) });
+  store.ecrire('sd:cle', 'x');
+  assert.equal(store.effacer('sd:cle'), true);
+  assert.equal(store.lire('sd:cle', null), null);
+  assert.equal(m.has('sd:cle'), false);
+  const plein = creerStore({ getItem: () => null, setItem: () => { throw new Error('quota'); }, removeItem: () => {} });
+  plein.ecrire('sd:a', 1);
+  plein.effacer('sd:a');
+  assert.equal(plein.lire('sd:a', null), null);
+});

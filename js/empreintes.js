@@ -25,6 +25,23 @@ export function decoderEmb(b64) {
   return normaliser(octets);
 }
 
+// Cache des empreintes décodées (id → {b64, emb}) : une même carte n'est décodée qu'une fois
+// tant que la pile ne change pas (main.js le vide à chaque nouvelle pile). L'empreinte en base64
+// est comparée : un id dont l'empreinte a changé est décodé de nouveau.
+const cacheEmpreintes = new Map();
+
+export function empreinteDe(id, b64) {
+  const connue = cacheEmpreintes.get(id);
+  if (connue && connue.b64 === b64) return connue.emb;
+  const emb = decoderEmb(b64);
+  cacheEmpreintes.set(id, { b64, emb });
+  return emb;
+}
+
+export function viderCacheEmpreintes() {
+  cacheEmpreintes.clear();
+}
+
 // 0 si les dimensions diffèrent (pile de la phase 2 en 512 contre démo en 8) ou si un vecteur est vide.
 export function cosinus(a, b) {
   if (!a || !b || a.length === 0 || a.length !== b.length) return 0;
