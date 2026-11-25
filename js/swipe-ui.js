@@ -55,12 +55,17 @@ function construireCarte(entree, active) {
  *   echauffementFait() -> number      swipes d'échauffement déjà faits
  *   vraisSwipes() -> number           swipes hors échauffement déjà faits
  *   auElargir()                       bouton « Élargir mes critères » de la pile vide
+ *   indisponible() -> boolean         la pile n'a pas pu être chargée (pile vide = « Réessayer »)
+ *   auReessayer()                     bouton « Réessayer » de la pile indisponible
+ *   idDessus                          carte à remettre sur le dessus au montage (si encore dans la suite)
+ *   auDessus(id | null)               appelé à chaque changement de la carte du dessus
  */
 export function monterPile(conteneur, options) {
   const {
     suivantes, auSwipe, auAnnuler,
     auRaison = () => {}, peutAnnuler = () => false, echauffementFait = () => 0, vraisSwipes = () => 0,
-    auElargir = null,
+    auElargir = null, indisponible = () => false, auReessayer = null,
+    idDessus = null, auDessus = () => {},
   } = options;
 
   let carteActive = null; // {noeud, entree, idDerriere}
@@ -132,6 +137,14 @@ export function monterPile(conteneur, options) {
   }
 
   function pileVide() {
+    if (indisponible()) {
+      return el('div', { class: 'pile-vide' },
+        el('p', { class: 'pile-vide-titre' }, "Annonces indisponibles pour l'instant."),
+        el('p', { class: 'aide' }, 'Vérifie ta connexion puis réessaie.'),
+        auReessayer
+          ? el('button', { type: 'button', class: 'bouton bouton-principal', onclick: () => auReessayer() }, 'Réessayer')
+          : null);
+    }
     return el('div', { class: 'pile-vide' },
       el('p', { class: 'pile-vide-titre' }, 'Plus de cartes pour l\'instant'),
       el('p', { class: 'aide' }, 'Élargis ta taille, ton budget ou tes catégories pour en voir d’autres.'),
@@ -158,6 +171,7 @@ export function monterPile(conteneur, options) {
     } else {
       cartes.append(pileVide());
     }
+    auDessus(dessus?.carte.id ?? null);
     majBandeau();
     majBoutons();
   }
@@ -255,7 +269,11 @@ export function monterPile(conteneur, options) {
     cacherRaisons();
     // Enregistré tout de suite : quitter l'écran pendant l'animation ne perd pas le swipe.
     auSwipe(entree, sens);
-    annoncer(sens === 'droite' ? 'Ajouté aux favoris.' : 'Carte écartée.');
+    // Si l'écran est quitté pendant l'animation, c'est la carte d'après qui sera sur le dessus au retour.
+    auDessus(idDerriere ?? null);
+    // Les cartes d'échauffement aimées ne vont pas dans les favoris.
+    if (sens === 'droite') annoncer(entree.echauffement ? 'Noté.' : 'Ajouté aux favoris.');
+    else annoncer('Carte écartée.');
     const proposerRaison = sens === 'gauche' && !entree.echauffement;
     const suite = () => {
       verrou = false;
@@ -343,7 +361,7 @@ export function monterPile(conteneur, options) {
   }
   document.addEventListener('keydown', auClavier);
 
-  dessiner();
+  dessiner(idDessus);
 
   return function nettoyer() {
     detruit = true;
@@ -373,5 +391,9 @@ enregistrerEcran('swipe', (conteneur, donnees) => {
     echauffementFait: donnees.echauffementFait,
     vraisSwipes: donnees.vraisSwipes,
     auElargir: donnees.auElargir,
+    indisponible: donnees.indisponible,
+    auReessayer: donnees.auReessayer,
+    idDessus: donnees.idDessus,
+    auDessus: donnees.auDessus,
   });
 });

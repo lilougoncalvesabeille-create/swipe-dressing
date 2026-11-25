@@ -205,6 +205,26 @@ input:user-invalid, select:user-invalid { border-color: var(--danger); }
   gap: 10px;
 }
 
+.erreur-demarrage { margin: 0; padding: 24px 16px; text-align: center; }
+
+/* Budget par catégorie (réglages), replié par défaut */
+.budgets-categories {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+.budgets-categories > summary {
+  min-height: 32px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.budgets-categories[open] > summary { margin-bottom: 12px; }
+.budgets-categories .aide { margin-bottom: 12px; }
+.budgets-categories .grille-champs { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.budgets-categories input { background: var(--surface); }
+
 /* Sélecteur segmenté (rayon, stricte / large) */
 .segments {
   display: grid;

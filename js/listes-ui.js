@@ -172,6 +172,11 @@ enregistrerEcran('detail', (conteneur, donnees) => {
   const url = urlSure(c.url);
   const statut = el('p', { class: 'statut', role: 'status', 'aria-live': 'polite' });
 
+  const infos = lignes.length > 0
+    ? el('dl', { class: 'fiche-infos' },
+      lignes.map((l) => el('div', { class: 'fiche-ligne', 'data-cle': l.cle }, el('dt', {}, l.libelle), el('dd', {}, l.valeur))))
+    : null;
+
   const actions = el('div', { class: 'fiche-actions' },
     url
       ? el('a', { class: 'bouton bouton-principal bouton-lien', href: url, target: '_blank', rel: 'noopener' }, 'Voir l\'annonce')
@@ -184,6 +189,9 @@ enregistrerEcran('detail', (conteneur, donnees) => {
       onclick: () => {
         auRepecher(swipe.id);
         repecher.remove();
+        // Repêchée : elle n'est plus « refusée », la ligne de la raison disparaît.
+        infos?.querySelector('[data-cle="raison"]')?.remove();
+        if (infos && !infos.firstChild) infos.remove();
         statut.textContent = 'Ajoutée à tes favoris.';
       },
     }, 'Finalement j\'aime');
@@ -196,10 +204,7 @@ enregistrerEcran('detail', (conteneur, donnees) => {
     el('header', { class: 'fiche-entete' },
       titre(c.titre ?? 'Annonce', { class: 'fiche-titre' }),
       el('p', { class: 'fiche-prix' }, formaterPrix(c.prix))),
-    lignes.length > 0
-      ? el('dl', { class: 'fiche-infos' },
-        lignes.map((l) => el('div', { class: 'fiche-ligne' }, el('dt', {}, l.libelle), el('dd', {}, l.valeur))))
-      : null,
+    infos,
     typeof c.description === 'string' && c.description.trim()
       ? el('section', { class: 'fiche-description', 'aria-labelledby': 'titre-description' },
         el('h2', { id: 'titre-description' }, 'Description'),

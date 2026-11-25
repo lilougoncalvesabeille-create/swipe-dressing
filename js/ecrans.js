@@ -3,7 +3,7 @@
 
 import {
   LETTRES_TAILLE, RAYONS, MODES, LIBELLES_ETATS, CATEGORIES_LISTE, PAYS, BORNES,
-  valeursDepuisProfil, lireFormulaire,
+  valeursDepuisProfil, lireFormulaire, champBudget,
 } from './formulaire.js';
 import { ETATS } from './paquet.js';
 
@@ -147,7 +147,17 @@ function blocTaille(titreBloc, champs, nomMode) {
   );
 }
 
-function etapes() {
+// Budgets par catégorie (réglages) : repliés par défaut, vides = budget global.
+function budgetsParCategorie() {
+  return el('details', { class: 'budgets-categories' },
+    el('summary', {}, 'Budget par catégorie'),
+    el('p', { class: 'aide' }, 'Laisse vide pour utiliser le budget maximum ci-dessus.'),
+    el('div', { class: 'grille-champs' },
+      CATEGORIES_LISTE.map((c) => champ(`${c.libelle} (€)`,
+        nombre(champBudget(c.valeur), { min: BORNES.budget.min, max: BORNES.budget.max, pas: 1 }, { placeholder: 'global' })))));
+}
+
+function etapes({ parCategorie = false } = {}) {
   return [
     {
       titre: 'Toi',
@@ -182,10 +192,12 @@ function etapes() {
           type: 'text', name: 'region', maxlength: 80, autocomplete: 'address-level1',
           placeholder: 'ex. Bretagne',
         }), 'Facultatif.'),
+        el('p', { class: 'aide' }, 'Le pays et la région servent à la recherche des annonces (livraison).'),
         champ('Budget maximum par article (€)', Object.assign(
           nombre('budget', { min: BORNES.budget.min, max: BORNES.budget.max, pas: 1 }, { placeholder: 'ex. 60' }),
           { required: true },
-        )),
+        ), parCategorie ? null : 'Ajustable par catégorie dans les Réglages.'),
+        parCategorie ? budgetsParCategorie() : null,
       ],
     },
     {
@@ -233,9 +245,13 @@ function lire(form) {
   return valeurs;
 }
 
-// Premier champ invalide d'un ensemble de champs, ou null.
-const premierInvalide = (racine) =>
-  [...racine.querySelectorAll('input, select')].find((c) => !c.checkValidity()) ?? null;
+// Premier champ invalide d'un ensemble de champs, ou null (son bloc replié est ouvert pour le montrer).
+function premierInvalide(racine) {
+  const invalide = [...racine.querySelectorAll('input, select')].find((c) => !c.checkValidity()) ?? null;
+  const repli = invalide?.closest('details');
+  if (repli) repli.open = true;
+  return invalide;
+}
 
 /**
  * Construit le formulaire de profil dans `conteneur`.
@@ -245,8 +261,8 @@ const premierInvalide = (racine) =>
  * auValider(profil) reçoit un nouveau profil construit sur `profil` (jamais modifié).
  */
 export function formulaireProfil(conteneur, profil, auValider, options = {}) {
-  const { etapes: enEtapes = true, exploration = false, libelleValider } = options;
-  const sections = etapes().map((etape, i) => el('fieldset', { class: 'etape', 'data-etape': i },
+  const { etapes: enEtapes = true, exploration = false, libelleValider, parCategorie = false } = options;
+  const sections = etapes({ parCategorie }).map((etape, i) => el('fieldset', { class: 'etape', 'data-etape': i },
     el('legend', { class: 'etape-titre' }, etape.titre),
     etape.intro ? el('p', { class: 'aide' }, etape.intro) : null,
     etape.champs,
@@ -350,7 +366,7 @@ enregistrerEcran('questionnaire', (conteneur, { profil, auValider }) => {
 
 enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer }) => {
   conteneur.append(el('header', { class: 'entete' }, titre('Réglages')));
-  formulaireProfil(conteneur, profil, auEnregistrer, { etapes: false, exploration: true });
+  formulaireProfil(conteneur, profil, auEnregistrer, { etapes: false, exploration: true, parCategorie: true });
   conteneur.append(
     el('section', { class: 'zone-danger', 'aria-labelledby': 'titre-effacer' },
       el('h2', { id: 'titre-effacer' }, 'Repartir de zéro'),
@@ -358,7 +374,7 @@ enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer 
       el('button', {
         type: 'button', class: 'bouton bouton-danger',
         onclick: () => {
-          if (window.confirm('Tout effacer ? Ton profil, tes favoris et ton historique seront supprimés. Impossible de revenir en arrière.')) {
+          if (window.confirm('Tout effacer ? Ton profil, tes favoris et ton historique seront supprimés, et les annonces déjà vues pourront revenir.')) {
             auToutEffacer();
           }
         },
