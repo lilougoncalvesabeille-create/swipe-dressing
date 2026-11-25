@@ -91,3 +91,26 @@ test('méthodes détachées : lire et ecrire fonctionnent sans this', () => {
   assert.equal(ecrire('b', 'x'.repeat(200)), false);
   assert.equal(lire('b').length, 200);
 });
+
+test('clés critiques : un refus sur une autre clé (grosse pile) ne rend pas le store non persistant', () => {
+  const store = creerStore(stockageAvecQuota(100), { critiques: ['sd:swipes', 'sd:profil'] });
+  assert.equal(store.ecrire('sd:pile', { gros: 'x'.repeat(200) }), false);
+  assert.equal(store.persistant, true);
+  assert.equal(store.ecrire('sd:swipes', ['x'.repeat(200)]), false);
+  assert.equal(store.persistant, false);
+});
+
+test('clés critiques : une écriture réussie de la même clé rétablit l’état persistant', () => {
+  const store = creerStore(stockageAvecQuota(100), { critiques: ['sd:profil'] });
+  assert.equal(store.ecrire('sd:profil', 'x'.repeat(200)), false);
+  assert.equal(store.persistant, false);
+  assert.equal(store.ecrire('sd:profil', 'petit'), true);
+  assert.equal(store.persistant, true);
+});
+
+test('clés critiques : stockage absent ou illisible reste non persistant', () => {
+  assert.equal(creerStore(null, { critiques: ['sd:swipes'] }).persistant, false);
+  const casse = creerStore({ getItem: () => { throw new Error('bloqué'); }, setItem: () => {} }, { critiques: ['sd:swipes'] });
+  casse.lire('sd:pile');
+  assert.equal(casse.persistant, false);
+});

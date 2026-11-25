@@ -9,11 +9,16 @@ function stockageParDefaut() {
   }
 }
 
-export function creerStore(stockage = stockageParDefaut()) {
+/**
+ * options.critiques : clés dont un échec d'écriture rend le store « non persistant »
+ * (par défaut, toutes). Une écriture réussie de la même clé efface son échec.
+ */
+export function creerStore(stockage = stockageParDefaut(), { critiques = null } = {}) {
   const memoire = new Map();
   const disque = stockage ?? null;
   let lectureCassee = false;
-  let ecritureRefusee = false;
+  const enEchec = new Set(); // clés dont la dernière écriture a été refusée
+  const critique = (cle) => critiques === null || critiques.includes(cle);
 
   // En repli, la mémoire (valeurs les plus récentes) prime, puis on relit le stockage
   // d'origine tant qu'il répond : les données déjà enregistrées ne disparaissent pas.
@@ -41,9 +46,10 @@ export function creerStore(stockage = stockageParDefaut()) {
       try {
         disque.setItem(cle, brut);
         memoire.delete(cle);
+        enEchec.delete(cle);
         return true;
       } catch {
-        ecritureRefusee = true;
+        enEchec.add(cle);
       }
     }
     memoire.set(cle, brut);
@@ -54,7 +60,7 @@ export function creerStore(stockage = stockageParDefaut()) {
     lire,
     ecrire,
     get persistant() {
-      return disque !== null && !lectureCassee && !ecritureRefusee;
+      return disque !== null && !lectureCassee && ![...enEchec].some(critique);
     },
   };
 }
