@@ -1,0 +1,1035 @@
+[
+ {
+  "brute": "M",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "L",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "XL",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "L",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "stricte"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "2XL",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "XL",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "M/L",
+  "categorie": "sweat",
+  "profil": {
+   "haut": {
+    "lettre": "L",
+    "eu": null,
+    "mode": "stricte"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "40",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "W32 L34",
+  "categorie": "jean",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "W33",
+  "categorie": "jean",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "42",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "43,5",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "45",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "Taille unique",
+  "categorie": "gants",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "",
+  "categorie": "bonnet",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "EU 42",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "Taille EU 38",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": 38,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "M-L",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "L",
+    "eu": null,
+    "mode": "stricte"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "38 - 40",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": 40,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "2023",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "xl",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "XL",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "Taille M",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "42 2/3",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "W33 L32",
+  "categorie": "jean",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "stricte"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "XS / S",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "S",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "One size",
+  "categorie": "bonnet",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "36",
+  "categorie": "pantalon",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": 38,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "43",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "43 1/3",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "2024",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "Taille 43",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "EU 44",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "EU 45",
+  "categorie": "chaussures",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "S/M",
+  "categorie": "chemise",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "S-M",
+  "categorie": "chemise",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "XXL",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "3XL",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "XXL",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "42",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": 42,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "Taille EU 40",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": 38,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "voisine"
+ },
+ {
+  "brute": "EU 38 - 40",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": 40,
+    "mode": "stricte"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "W32",
+  "categorie": "jean",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "stricte"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "W34",
+  "categorie": "jean",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ },
+ {
+  "brute": "38",
+  "categorie": "jean",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": 38,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "One size",
+  "categorie": "sac",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "Taille unique",
+  "categorie": "ceinture",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": "exacte"
+ },
+ {
+  "brute": "n/a",
+  "categorie": "pull",
+  "profil": {
+   "haut": {
+    "lettre": "M",
+    "eu": null,
+    "mode": "large"
+   },
+   "bas": {
+    "lettre": null,
+    "eu": null,
+    "w": 32,
+    "mode": "large"
+   },
+   "pointure": {
+    "eu": 43,
+    "mode": "large"
+   }
+  },
+  "attendu": null
+ } ]

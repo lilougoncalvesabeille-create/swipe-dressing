@@ -27,7 +27,7 @@ function rangLettre(texte) {
 
 function lirePointures(brute) {
   const lectures = [];
-  for (const m of brute.matchAll(/(\d{2})(?:\s*([.,]\d+)|\s+([12])\/3)?/g)) {
+  for (const m of brute.matchAll(/(?<!\d)(\d{2})(?:\s*([.,]\d+)|\s+([12])\/3)?(?!\d)/g)) {
     let valeur = Number(m[1]);
     if (m[2]) valeur += Number(m[2].replace(',', '.'));
     else if (m[3]) valeur += Number(m[3]) / 3;
@@ -38,13 +38,13 @@ function lirePointures(brute) {
 
 function lireVetement(brute, type) {
   const lectures = [];
-  const texte = brute.toUpperCase();
+  const texte = brute.toUpperCase().trim().replace(/^(?:(?:TAILLE|EU)\s+)+/, '');
   if (type === 'bas') {
     const w = texte.match(/\bW\s*(\d{2})\b/);
     if (w) return [{ systeme: 'w', valeur: Number(w[1]) }];
   }
-  for (const morceau of texte.split('/')) {
-    const m = morceau.trim().replace(/^TAILLE\s+/, '');
+  for (const morceau of texte.split(/\s*[/-]\s*/)) {
+    const m = morceau.trim();
     const rang = rangLettre(m);
     if (rang !== null) lectures.push({ systeme: 'lettres', valeur: rang });
     else if (/^\d{2}$/.test(m)) {
