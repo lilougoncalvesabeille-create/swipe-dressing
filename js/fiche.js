@@ -44,6 +44,23 @@ export function formaterDate(iso) {
   return Number.isNaN(date.getTime()) ? null : jourMoisAn.format(date);
 }
 
+/**
+ * Temps écoulé depuis `iso` : « à l'instant », « il y a 12 min », « il y a 3 h », « il y a 2 jours ».
+ * null si la date est absente ou illisible. Une date dans le futur (horloge décalée) donne « à l'instant ».
+ */
+export function ilYA(iso, maintenant = new Date()) {
+  if (typeof iso !== 'string' || !iso.trim()) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  const minutes = Math.floor((maintenant.getTime() - t) / 60_000);
+  if (minutes < 1) return 'à l’instant';
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const heures = Math.floor(minutes / 60);
+  if (heures < 24) return `il y a ${heures} h`;
+  const jours = Math.floor(heures / 24);
+  return `il y a ${jours} ${jours > 1 ? 'jours' : 'jour'}`;
+}
+
 export function libelleEtat(etat) {
   return LIBELLES_ETAT[etat] ?? null;
 }

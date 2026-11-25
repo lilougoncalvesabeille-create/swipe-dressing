@@ -6,6 +6,8 @@ import {
   valeursDepuisProfil, lireFormulaire, champBudget,
 } from './formulaire.js';
 import { ETATS } from './paquet.js';
+import { texteEtatSynchro, retourCle, problemeSaisieCle, ETAPES_CLE } from './synchro.js';
+import { ilYA } from './fiche.js';
 
 // --- Petit outil de construction du DOM (sans innerHTML : aucun texte n'est interprété) ---
 
@@ -364,9 +366,154 @@ enregistrerEcran('questionnaire', (conteneur, { profil, auValider }) => {
   formulaireProfil(conteneur, profil, auValider, { etapes: true });
 });
 
-enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer }) => {
+// --- Réglages → « Synchronisation » ---
+// La clé GitHub n'est jamais relue ni affichée : seuls ses 4 derniers caractères (synchro.finCle())
+// le sont. Le champ est vidé dès la saisie lue, avant même le test.
+
+const RAFRAICHIR_DATES = 30_000; // ms : « il y a X min » reste juste tant que l'écran est ouvert
+
+/**
+ * Section « Synchronisation » des Réglages. Renvoie {section, nettoyer}.
+ * `synchro` : actions de main.js (cleEnregistree, enregistrerCle, testerCle, oublierCle,
+ * synchroniser, finCle) ; `etat.synchro` est relu à chaque événement « sd:synchro ».
+ */
+function sectionSynchro(synchro, etat) {
+  const champCle = el('input', {
+    type: 'password', id: 'sync-cle', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off',
+    spellcheck: 'false', 'aria-describedby': 'sync-cle-aide',
+  });
+  const ligneEtat = el('p', { class: 'synchro-etat' });
+  const ligneCle = el('p', { class: 'aide synchro-cle' });
+  const ligneRecolte = el('p', { class: 'aide' });
+  const ligneEnvoi = el('p', { class: 'aide' });
+  const retour = el('p', { class: 'statut synchro-retour', role: 'status', 'aria-live': 'polite' });
+  const detail = el('p', { class: 'aide synchro-detail', hidden: true });
+  const boutonEnregistrer = el('button', { type: 'button', class: 'bouton bouton-principal' }, 'Enregistrer et tester');
+  const boutonRetirer = el('button', { type: 'button', class: 'bouton bouton-secondaire' }, 'Retirer la clé');
+
+  let occupe = false;
+  let texteStable = null; // dernier état affiché hors « en-cours » (évite un clignotement à chaque synchro)
+
+  function montrerRetour({ texte, detail: precision, erreur }) {
+    retour.textContent = texte ?? '';
+    retour.classList.toggle('statut-erreur', !!erreur);
+    detail.textContent = precision ?? '';
+    detail.hidden = !precision;
+  }
+
+  function maj() {
+    const avecCle = synchro.cleEnregistree();
+    const etatSynchro = etat.synchro ?? {};
+    // Le réseau coupé se voit tout de suite, sans attendre la prochaine synchronisation.
+    const horsLigne = navigator.onLine === false && etatSynchro.statut !== 'cle-refusee';
+    const statut = !avecCle ? 'sans-cle' : horsLigne ? 'hors-ligne' : etatSynchro.statut;
+    if (statut !== 'en-cours' || texteStable === null) texteStable = texteEtatSynchro(statut);
+    ligneEtat.textContent = texteStable;
+    ligneEtat.dataset.statut = statut;
+    const fin = avecCle ? synchro.finCle() : '';
+    ligneCle.textContent = fin ? `Clé enregistrée : …${fin}` : 'Clé enregistrée.';
+    ligneCle.hidden = !avecCle;
+    const maintenant = new Date();
+    ligneRecolte.textContent = `Dernière récolte : ${ilYA(etatSynchro.recolte?.dernier_passage, maintenant) ?? 'pas encore reçue'}`;
+    ligneEnvoi.textContent = `Derniers choix envoyés : ${ilYA(etatSynchro.dernierEnvoi, maintenant) ?? 'pas encore'}`;
+    ligneRecolte.hidden = !avecCle;
+    ligneEnvoi.hidden = !avecCle;
+    boutonRetirer.hidden = !avecCle;
+    champCle.placeholder = avecCle ? 'Colle une nouvelle clé pour la remplacer' : 'github_pat_…';
+    boutonEnregistrer.disabled = occupe;
+    boutonRetirer.disabled = occupe;
+  }
+
+  async function enregistrer() {
+    if (occupe) return;
+    // La saisie est lue puis effacée du champ tout de suite : la clé ne reste pas affichée dans la page.
+    const saisie = champCle.value;
+    champCle.value = '';
+    const avecCle = synchro.cleEnregistree();
+    // Champ vide avec une clé déjà enregistrée : on teste celle-ci.
+    if (!saisie.trim() && !avecCle) {
+      montrerRetour({ texte: problemeSaisieCle(saisie), erreur: true });
+      champCle.focus();
+      return;
+    }
+    occupe = true;
+    maj();
+    montrerRetour({ texte: 'Test de la clé…' });
+    let resultat;
+    try {
+      if (saisie.trim()) {
+        resultat = await synchro.enregistrerCle(saisie);
+      } else {
+        resultat = await synchro.testerCle();
+        if (resultat.ok) synchro.synchroniser();
+      }
+    } catch {
+      resultat = { ok: false, raison: 'github', message: 'Le test de la clé a échoué : réessaie plus tard.' };
+    } finally {
+      occupe = false;
+    }
+    montrerRetour(retourCle(resultat));
+    maj();
+  }
+
+  function retirer() {
+    if (occupe) return;
+    if (!window.confirm('Retirer la clé ? Ce téléphone repassera en mode démo. Tes choix déjà envoyés restent dans le dépôt privé.')) return;
+    synchro.oublierCle();
+    montrerRetour({ texte: 'Clé retirée : retour au mode démo.' });
+    maj();
+  }
+
+  boutonEnregistrer.addEventListener('click', enregistrer);
+  boutonRetirer.addEventListener('click', retirer);
+  champCle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      enregistrer();
+    }
+  });
+  champCle.addEventListener('input', () => montrerRetour({}));
+
+  const section = el('section', { class: 'zone-synchro', 'aria-labelledby': 'titre-synchro' },
+    el('h2', { id: 'titre-synchro' }, 'Synchronisation'),
+    ligneEtat,
+    ligneCle,
+    ligneRecolte,
+    ligneEnvoi,
+    el('div', { class: 'champ' },
+      el('label', { for: 'sync-cle' }, 'Clé GitHub'),
+      champCle,
+      el('p', { class: 'aide', id: 'sync-cle-aide' },
+        'Gardée seulement sur ce téléphone. Une fois enregistrée, elle n’est plus jamais affichée.')),
+    el('div', { class: 'synchro-boutons' }, boutonEnregistrer, boutonRetirer),
+    retour,
+    detail,
+    el('details', { class: 'pas-a-pas' },
+      el('summary', {}, 'Comment créer la clé ?'),
+      el('ol', {}, ETAPES_CLE.map((etape) => el('li', {}, etape)))),
+  );
+
+  maj();
+  window.addEventListener('sd:synchro', maj);
+  window.addEventListener('online', maj);
+  window.addEventListener('offline', maj);
+  const minuterie = setInterval(maj, RAFRAICHIR_DATES);
+  return {
+    section,
+    nettoyer: () => {
+      window.removeEventListener('sd:synchro', maj);
+      window.removeEventListener('online', maj);
+      window.removeEventListener('offline', maj);
+      clearInterval(minuterie);
+    },
+  };
+}
+
+enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer, synchro, etat }) => {
   conteneur.append(el('header', { class: 'entete' }, titre('Réglages')));
   formulaireProfil(conteneur, profil, auEnregistrer, { etapes: false, exploration: true, parCategorie: true });
+  const zoneSynchro = synchro && etat ? sectionSynchro(synchro, etat) : null;
+  if (zoneSynchro) conteneur.append(zoneSynchro.section);
   conteneur.append(
     el('section', { class: 'zone-danger', 'aria-labelledby': 'titre-effacer' },
       el('h2', { id: 'titre-effacer' }, 'Repartir de zéro'),
@@ -380,4 +527,5 @@ enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer 
         },
       }, 'Tout effacer')),
   );
+  return zoneSynchro?.nettoyer;
 });

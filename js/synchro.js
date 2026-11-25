@@ -391,3 +391,90 @@ export function recolteEnRetard(recolte, maintenant = new Date()) {
   const t = ms(recolte.dernier_passage);
   return !Number.isFinite(t) || maintenant.getTime() - t > UN_JOUR;
 }
+
+// --- Textes affichés (Réglages → « Synchronisation » et bandeau de l'écran de swipe) ---
+
+export const CLE_REFUSEE = 'Clé refusée : vérifie qu\'elle donne accès à swipe-dressing-donnees (Contents : lecture et écriture)';
+export const MODE_DEMO = 'Mode démo : ajoute ta clé pour recevoir de vraies annonces.';
+
+const TEXTES_ETAT = {
+  'sans-cle': MODE_DEMO,
+  pret: 'Synchronisation…',
+  'en-cours': 'Synchronisation…',
+  ok: 'Connecté au dépôt privé',
+  'hors-ligne': 'Hors connexion',
+  'cle-refusee': CLE_REFUSEE,
+  erreur: 'Synchronisation impossible pour l’instant, nouvel essai plus tard.',
+};
+
+/** Ligne d'état de Réglages → « Synchronisation » pour etat.synchro.statut. */
+export function texteEtatSynchro(statut) {
+  return TEXTES_ETAT[statut] ?? TEXTES_ETAT.erreur;
+}
+
+export const MESSAGES_RECOLTE = {
+  bloque: 'Vinted a bloqué la dernière récolte, nouvel essai plus tard.',
+  erreur: 'La dernière récolte a échoué.',
+  retard: 'Pas de nouvelle récolte depuis plus d\'un jour : le PC est-il allumé ?',
+  attenteProfil: 'Le PC attend ton profil : il arrivera à la prochaine synchronisation.',
+};
+
+/**
+ * Texte du bandeau de l'écran de swipe d'après recolte.json, ou null si tout va bien.
+ * Même règle que recolteEnRetard (bloquée, en erreur, sans date lisible ou plus de 24 h), plus
+ * l'attente du profil. Un passage bloqué ou en erreur l'emporte sur l'ancienneté ; une récolte
+ * de plus de 24 h l'emporte sur l'attente du profil (le PC ne tourne sans doute plus).
+ */
+export function messageRecolte(recolte, maintenant = new Date()) {
+  if (!recolte || typeof recolte !== 'object' || Array.isArray(recolte)) return null;
+  if (recolte.statut === 'bloque') return MESSAGES_RECOLTE.bloque;
+  if (recolte.statut === 'erreur') return MESSAGES_RECOLTE.erreur;
+  const t = ms(recolte.dernier_passage);
+  if (!Number.isFinite(t) || maintenant.getTime() - t > UN_JOUR) return MESSAGES_RECOLTE.retard;
+  if (recolte.statut === 'attente-profil') return MESSAGES_RECOLTE.attenteProfil;
+  return null;
+}
+
+/** Saisie de la clé : message si elle est vide ou contient un espace, null si elle peut être testée. */
+export function problemeSaisieCle(saisie) {
+  const cle = String(saisie ?? '').trim();
+  if (!cle) return 'Colle d’abord la clé GitHub.';
+  if (/\s/.test(cle)) return 'La clé ne doit contenir ni espace ni retour à la ligne.';
+  return null;
+}
+
+/**
+ * Retour affiché après « Enregistrer et tester » : {texte, detail, erreur}.
+ * `resultat` est celui de tester() ou de enregistrerCle() ({ok, raison, message, enregistree?}) ;
+ * raison 'saisie' : clé vide ou avec un espace (voir problemeSaisieCle).
+ * Les messages de tester() ne citent jamais la clé.
+ */
+export function retourCle(resultat) {
+  const r = resultat ?? {};
+  const message = typeof r.message === 'string' ? r.message : '';
+  const phrase = (...parties) => parties.filter(Boolean).join(' ') || null;
+  if (r.ok) {
+    return { texte: 'Connecté au dépôt privé', detail: r.enregistree ? 'Clé enregistrée.' : null, erreur: false };
+  }
+  if (r.raison === 'saisie') return { texte: message, detail: null, erreur: true };
+  if (r.raison === 'cle' || r.raison === 'acces') {
+    return {
+      texte: CLE_REFUSEE,
+      detail: phrase(message, r.enregistree === false ? 'Elle n’a pas été enregistrée.' : null),
+      erreur: true,
+    };
+  }
+  const enregistree = r.enregistree ? 'La clé est enregistrée : elle sera essayée plus tard.' : null;
+  if (r.raison === 'reseau') return { texte: 'Hors connexion', detail: phrase(message, enregistree), erreur: true };
+  return { texte: 'GitHub ne répond pas pour l’instant', detail: phrase(message, enregistree), erreur: true };
+}
+
+/** Pas-à-pas « Comment créer la clé ? » (noms exacts de github.com). */
+export const ETAPES_CLE = [
+  'Sur github.com, connecte-toi, touche ta photo de profil puis Settings.',
+  'Tout en bas du menu : Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.',
+  'Token name : par exemple « Swipe Dressing téléphone ». Resource owner : ton compte. Expiration : 1 an conseillé (Custom…, puis la date dans un an).',
+  'Repository access : Only select repositories, puis choisis swipe-dressing-donnees.',
+  'Permissions → Contents : Read and write (Metadata : Read-only s’ajoute tout seul).',
+  'Generate token, copie la clé (elle commence par github_pat_), colle-la ci-dessus et touche « Enregistrer et tester ». Ensuite, seuls ses 4 derniers caractères restent visibles.',
+];

@@ -6,6 +6,7 @@ import { el, enregistrerEcran, photoAvecRepli } from './ecrans.js';
 import { RAISONS, LIBELLES_RAISONS, SEUIL_ECHAUFFEMENT, garderEnTete } from './paquet.js';
 import { formaterPrix, libelleTaille, libelleSite } from './fiche.js';
 import { vitesseX, decisionSwipe, estUnTap, rotation, intensite } from './geste.js';
+import { messageRecolte, MESSAGES_RECOLTE } from './synchro.js';
 
 const DUREE_SORTIE = 250; // ms : animation de sortie (et verrou pendant ce temps)
 const DUREE_RAISONS = 4000; // ms : temps d'affichage des puces de raison
@@ -371,18 +372,40 @@ export function monterPile(conteneur, options) {
   };
 }
 
+// --- Bandeau « récolte » (recolte.json du dépôt privé, seulement avec une clé) ---
+
+/**
+ * Bandeau discret en haut de l'écran de swipe quand la récolte du PC est bloquée, en erreur,
+ * en retard ou attend le profil. Mis à jour à chaque événement « sd:synchro » (sans redessiner
+ * les cartes). Renvoie la fonction de nettoyage.
+ */
+function monterBandeauRecolte(parent, { etat, synchro } = {}) {
+  const bandeau = el('p', { class: 'bandeau-recolte', role: 'status', hidden: true });
+  parent.append(bandeau);
+  const maj = () => {
+    const message = synchro?.cleEnregistree?.() ? messageRecolte(etat?.synchro?.recolte, new Date()) : null;
+    bandeau.textContent = message ?? '';
+    bandeau.hidden = !message;
+    bandeau.classList.toggle('bandeau-recolte-info', message === MESSAGES_RECOLTE.attenteProfil);
+  };
+  maj();
+  window.addEventListener('sd:synchro', maj);
+  return () => window.removeEventListener('sd:synchro', maj);
+}
+
 // --- Écran « swipe » ---
 
 enregistrerEcran('swipe', (conteneur, donnees) => {
   const section = el('section', { class: 'swipe', 'aria-labelledby': 'titre-swipe' },
     el('h1', { id: 'titre-swipe', class: 'visuellement-cache', tabindex: '-1' }, 'Swipe'));
   conteneur.append(section);
+  const nettoyerBandeau = monterBandeauRecolte(section, donnees);
   // Avant l'arrivée de la pile : écran d'attente léger (main.js redessine l'écran ensuite).
   if (!donnees.chargee) {
     section.append(el('p', { class: 'chargement', role: 'status' }, 'Chargement…'));
-    return undefined;
+    return nettoyerBandeau;
   }
-  return monterPile(section, {
+  const nettoyerPile = monterPile(section, {
     suivantes: donnees.suivantes,
     auSwipe: donnees.auSwipe,
     auAnnuler: donnees.auAnnuler,
@@ -396,4 +419,8 @@ enregistrerEcran('swipe', (conteneur, donnees) => {
     idDessus: donnees.idDessus,
     auDessus: donnees.auDessus,
   });
+  return () => {
+    nettoyerBandeau();
+    nettoyerPile();
+  };
 });

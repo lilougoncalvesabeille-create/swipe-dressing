@@ -158,6 +158,7 @@ legend { float: left; width: 100%; padding: 0; }
 
 input[type="text"],
 input[type="number"],
+input[type="password"],
 select {
   width: 100%;
   min-height: 48px;
@@ -339,6 +340,7 @@ input[type="range"] {
 
 .statut { flex: 1 0 100%; margin: 0; color: var(--accent); font-weight: 600; text-align: center; }
 .statut:empty { display: none; }
+.statut.statut-erreur { color: var(--danger); }
 
 .bouton {
   min-height: 52px;
@@ -368,6 +370,39 @@ input[type="range"] {
   border: 1px solid rgba(255, 123, 123, 0.35);
   border-radius: 18px;
 }
+
+/* Réglages → « Synchronisation » */
+.zone-synchro {
+  display: grid;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: 18px;
+}
+.synchro-etat { margin: 0; font-weight: 700; }
+.synchro-etat[data-statut="ok"] { color: #3ddc97; }
+.synchro-etat[data-statut="cle-refusee"],
+.synchro-etat[data-statut="erreur"] { color: var(--danger); }
+.synchro-etat[data-statut="hors-ligne"] { color: var(--alerte-texte); }
+.synchro-etat[data-statut="sans-cle"] { color: var(--texte-doux); font-weight: 600; }
+.zone-synchro input { background: var(--champ); }
+.synchro-boutons { display: flex; flex-wrap: wrap; gap: 12px; }
+.synchro-boutons .bouton { flex: 1 1 auto; }
+.zone-synchro .statut { text-align: left; }
+
+.pas-a-pas {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+.pas-a-pas > summary {
+  min-height: 32px;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pas-a-pas ol { display: grid; gap: 8px; margin: 10px 0 0; padding-left: 22px; font-size: 0.95rem; }
 
 /* --- Écran de swipe --- */
 
@@ -406,6 +441,19 @@ body[data-ecran="swipe"] .ecran {
 }
 
 .chargement { margin: auto; color: var(--texte-doux); font-size: 1.1rem; }
+
+/* Bandeau discret « récolte » (bloquée, en échec, en retard, profil attendu) */
+.bandeau-recolte {
+  flex: none;
+  margin: 0;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-radius: 12px;
+  color: var(--alerte-texte);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.bandeau-recolte.bandeau-recolte-info { color: var(--texte-doux); }
 
 .echauffement {
   align-self: center;

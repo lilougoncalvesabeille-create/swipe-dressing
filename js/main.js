@@ -10,7 +10,7 @@ import { chargerPile } from './pile.js';
 import { viderCacheEmpreintes } from './empreintes.js';
 import {
   creerClient, versSwipesJson, versProfilJson, envoyerSwipes, envoyerProfil, swipesApresImport,
-  recolteEnRetard, finDeCle, FICHIERS, ErreurCle, ErreurReseau,
+  recolteEnRetard, finDeCle, problemeSaisieCle, FICHIERS, ErreurCle, ErreurReseau,
 } from './synchro.js';
 import { completerProfil } from './formulaire.js';
 import { afficherEcran, majBandeauStockage } from './ecrans.js';
@@ -386,13 +386,14 @@ async function synchroniser({ forcer = false } = {}) {
 // Actions de synchronisation pour les écrans (Réglages → « Synchronisation », bandeau de récolte).
 const actionsSynchro = {
   cleEnregistree: () => lireCle() !== null,
-  /** Teste puis enregistre la clé (gardée aussi sans réseau). Renvoie {ok, raison, message, enregistree}. */
+  /**
+   * Teste puis enregistre la clé (gardée aussi sans réseau). Renvoie {ok, raison, message, enregistree} ;
+   * raison 'saisie' : clé vide ou avec un espace, rien n'est testé.
+   */
   enregistrerCle: async (saisie) => {
-    const cle = String(saisie ?? '').trim();
-    if (!cle) return { ok: false, raison: 'cle', message: 'Colle d’abord la clé GitHub.', enregistree: false };
-    if (/\s/.test(cle)) {
-      return { ok: false, raison: 'cle', message: 'La clé ne doit contenir ni espace ni retour à la ligne.', enregistree: false };
-    }
+    const probleme = problemeSaisieCle(saisie);
+    if (probleme) return { ok: false, raison: 'saisie', message: probleme, enregistree: false };
+    const cle = String(saisie).trim();
     const resultat = await creerClient({ cle, fetch: (...args) => globalThis.fetch(...args) }).tester();
     // Une clé refusée n'est pas gardée ; sans réseau, elle l'est (elle sera essayée plus tard).
     if (resultat.raison === 'cle' || resultat.raison === 'acces') return { ...resultat, enregistree: false };
