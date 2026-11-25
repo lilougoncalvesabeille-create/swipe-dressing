@@ -102,3 +102,48 @@ test('validerPile dédoublonne les ids (cartes, échauffement, et entre les deux
   assert.deepEqual(r.echauffement.map((c) => c.id), ['demo:3']);
   assert.equal(r.erreurs.length, 3);
 });
+
+const emb8 = encoderEmb([1, 0, 0, 0, 0, 0, 0, 0]);
+
+test('validerPile écarte les empreintes dont la dimension diffère de la majorité', () => {
+  const r = validerPile({
+    version: 1,
+    styles: [{ nom: 'streetwear', emb }, { nom: 'chic', emb: emb8 }],
+    echauffement: [carte('demo:e1'), carte('demo:e2', { emb: emb8 })],
+    cartes: [carte('demo:1'), carte('demo:2'), carte('demo:3', { emb: emb8 })],
+  });
+  assert.deepEqual(r.cartes.map((c) => c.id), ['demo:1', 'demo:2']);
+  assert.deepEqual(r.echauffement.map((c) => c.id), ['demo:e1']);
+  assert.deepEqual(r.styles.map((s) => s.nom), ['streetwear']);
+  assert.equal(r.erreurs.length, 3);
+  assert.ok(r.erreurs.every((e) => /dimension 8.*attendu 4/.test(e)), r.erreurs.join(' | '));
+});
+
+test('validerPile : une carte écartée pour sa dimension ne bloque pas son id', () => {
+  const r = validerPile({
+    version: 1,
+    cartes: [carte('demo:1', { emb: emb8 }), carte('demo:1'), carte('demo:2')],
+  });
+  assert.deepEqual(r.cartes.map((c) => c.id), ['demo:1', 'demo:2']);
+  assert.equal(r.cartes[0].emb, emb);
+  assert.equal(r.erreurs.length, 1);
+});
+
+test('validerPile : rayon homme/femme/mixte gardé, inconnu mis à null avec un message', () => {
+  const r = validerPile({
+    version: 1,
+    cartes: [
+      carte('demo:1', { rayon: 'homme' }), carte('demo:2', { rayon: 'femme' }), carte('demo:3', { rayon: 'mixte' }),
+      carte('demo:4'), carte('demo:5', { rayon: 'enfant' }), carte('demo:6', { rayon: null }),
+    ],
+  });
+  assert.deepEqual(r.cartes.map((c) => c.rayon), ['homme', 'femme', 'mixte', undefined, null, null]);
+  assert.equal(r.erreurs.length, 1);
+  assert.match(r.erreurs[0], /demo:5.*rayon/);
+});
+
+test('validerPile expose la source de la pile', () => {
+  assert.equal(validerPile({ version: 1, source: 'pc', cartes: [] }).source, 'pc');
+  assert.equal(validerPile({ version: 1, cartes: [] }).source, null);
+  assert.equal(validerPile(null).source, null);
+});

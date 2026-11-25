@@ -25,7 +25,9 @@ export function decoderEmb(b64) {
   return normaliser(octets);
 }
 
+// 0 si les dimensions diffèrent (pile de la phase 2 en 512 contre démo en 8) ou si un vecteur est vide.
 export function cosinus(a, b) {
+  if (!a || !b || a.length === 0 || a.length !== b.length) return 0;
   let ab = 0;
   let aa = 0;
   let bb = 0;

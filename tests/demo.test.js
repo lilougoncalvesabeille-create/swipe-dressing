@@ -48,3 +48,14 @@ test('le profil haut M / bas W32 / pointure 43 voit un mélange de tailles', asy
     }
   }
 });
+
+test('chaque carte de la démo a un rayon ; robes et jupes sont au rayon femme', () => {
+  const toutes = [...json.cartes, ...json.echauffement];
+  for (const c of toutes) assert.ok(['homme', 'femme', 'mixte'].includes(c.rayon), `${c.id} : rayon ${c.rayon}`);
+  for (const c of toutes.filter((x) => x.categorie === 'robe' || x.categorie === 'jupe')) assert.equal(c.rayon, 'femme', c.id);
+  for (const r of ['homme', 'femme', 'mixte']) assert.ok(json.cartes.some((c) => c.rayon === r), r);
+  // Assez de cartes d'échauffement pour chaque rayon (15 swipes d'échauffement).
+  for (const r of ['homme', 'femme']) {
+    assert.ok(json.echauffement.filter((c) => c.rayon === r || c.rayon === 'mixte').length >= 15, r);
+  }
+});

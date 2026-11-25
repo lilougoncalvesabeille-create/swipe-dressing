@@ -91,3 +91,11 @@ test('profilStyle : somme de 100 (plus fort reste) et styles à 0 omis', () => {
 test('profilStyle sans aimés renvoie []', () => {
   assert.deepEqual(profilStyle([], [{ nom: 'a', emb: A }]), []);
 });
+
+test('cosinus : 0 si les dimensions diffèrent ou si un vecteur est vide', () => {
+  assert.equal(cosinus(A, Float32Array.from([1, 0, 0, 0, 0, 0, 0, 0])), 0);
+  assert.equal(cosinus(Float32Array.from([1, 0, 0, 0, 0, 0, 0, 0]), A), 0);
+  assert.equal(cosinus(new Float32Array(0), new Float32Array(0)), 0);
+  assert.equal(cosinus(A, new Float32Array(0)), 0);
+  proche(cosinus(A, A), 1);
+});
