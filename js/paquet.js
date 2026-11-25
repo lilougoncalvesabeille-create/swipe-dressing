@@ -275,6 +275,39 @@ export function retirerIds(pile, ids) {
   return { ...pile, cartes: cartes.filter(garder), echauffement: echauffement.filter(garder) };
 }
 
+// --- Cartes déjà vues avant « Tout effacer » ---
+// Le récolteur garde les anciennes cartes de pile.json tant qu'elles ne sont pas dans swipes.json,
+// or swipes.json est vide après une remise à zéro : le téléphone garde donc la liste des ids déjà
+// vus (`{ids, avant}`) et les retire de chaque pile.
+
+/** Liste après une (nouvelle) remise à zéro : les ids d'une remise précédente sont gardés. */
+export function fusionnerEcartes(ancienne, ids, avant) {
+  const anciens = Array.isArray(ancienne?.ids) ? ancienne.ids : [];
+  const tous = [...new Set([...anciens, ...ids])];
+  return tous.length > 0 ? { ids: tous, avant } : null;
+}
+
+/**
+ * Retire de la pile les cartes déjà vues. Pour une pile générée après la remise à zéro, la liste
+ * est réduite aux ids encore présents dans cette pile : une annonce absente d'une telle pile ne
+ * peut plus revenir (les nouvelles candidates sont exclues par le cache du récolteur). Liste vide :
+ * `ecartes` vaut null (la clé peut être supprimée). Renvoie {pile, ecartes}.
+ */
+export function appliquerEcartes(pile, ecartes) {
+  if (!ecartes || !Array.isArray(ecartes.ids)) return { pile, ecartes: null };
+  if (pile.source === 'demo') return { pile, ecartes };
+  const filtree = retirerIds(pile, new Set(ecartes.ids));
+  const genereLe = Date.parse(pile.genere_le ?? '');
+  const avant = Date.parse(ecartes.avant ?? '');
+  // Pile d'avant la remise à zéro (ou sans date) : la liste ne change pas.
+  if (!(Number.isFinite(genereLe) && Number.isFinite(avant) && genereLe >= avant)) return { pile: filtree, ecartes };
+  const presents = new Set([...(pile.cartes ?? []), ...(pile.echauffement ?? [])].map((c) => c.id));
+  const restants = ecartes.ids.filter((id) => presents.has(id));
+  if (restants.length === 0) return { pile: filtree, ecartes: null };
+  if (restants.length === ecartes.ids.length) return { pile: filtree, ecartes };
+  return { pile: filtree, ecartes: { ...ecartes, ids: restants } };
+}
+
 // Nombre de swipes d'échauffement faits (pour le bandeau « Échauffement : X/15 »).
 export function echauffementFait(swipes) {
   return swipes.filter((s) => s.echauffement).length;

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { encoderEmb, empreinteDe, viderCacheEmpreintes } from '../js/empreintes.js';
 import {
   swipeValide, nettoyerSwipes, compacterSwipes, vusIds, favoris, historique, empreintes, echauffementFait,
-  majDispoFavoris, retirerIds, GARDER_CARTES, GARDER_EMPREINTES,
+  majDispoFavoris, retirerIds, GARDER_CARTES, GARDER_EMPREINTES, appliquerEcartes, fusionnerEcartes,
 } from '../js/paquet.js';
 
 // --- Points différés de la phase 1 : swipes, compactage, cache des empreintes ---
@@ -141,4 +141,57 @@ test('retirerIds : écarte des cartes de la pile (déjà vues avant « Tout effa
 
 test('tailles.js n\'utilise pas de lookbehind (iOS Safari < 16.4 refuserait tout le module)', () => {
   assert.doesNotMatch(readFileSync('js/tailles.js', 'utf8'), /\(\?<[!=]/);
+});
+
+// --- Cartes vues avant « Tout effacer » (tour 1) ---
+
+const pileDe = (ids, echauffement = [], genere_le = null) => ({
+  cartes: ids.map((id) => ({ id })), echauffement: echauffement.map((id) => ({ id })),
+  styles: [], erreurs: [], source: 'pc', genere_le,
+});
+const AVANT = '2026-02-01T00:00:00.000Z';
+
+test('appliquerEcartes : pile d\'avant la remise à zéro → tout est écarté, la liste ne bouge pas', () => {
+  const ecartes = { ids: ['a', 'b', 'z'], avant: AVANT };
+  const r = appliquerEcartes(pileDe(['a', 'c'], ['b'], '2026-01-31T00:00:00Z'), ecartes);
+  assert.deepEqual(r.pile.cartes.map((c) => c.id), ['c']);
+  assert.deepEqual(r.pile.echauffement, []);
+  assert.equal(r.ecartes, ecartes);
+  // Pile sans date : prudence, rien n'est retiré de la liste.
+  assert.equal(appliquerEcartes(pileDe(['a']), ecartes).ecartes, ecartes);
+});
+
+test('appliquerEcartes : pile plus récente qui contient encore des cartes swipées → filtrées, liste réduite', () => {
+  const ecartes = { ids: ['a', 'b', 'c', 'z'], avant: AVANT };
+  // Le récolteur garde les anciennes cartes de la pile : a et b (échauffement) y sont encore.
+  const r = appliquerEcartes(pileDe(['a', 'n1'], ['b', 'n2'], '2026-02-01T03:00:00Z'), ecartes);
+  assert.deepEqual(r.pile.cartes.map((c) => c.id), ['n1']);
+  assert.deepEqual(r.pile.echauffement.map((c) => c.id), ['n2']);
+  // c et z ne sont plus dans une pile d'après la remise à zéro : ils ne reviendront jamais.
+  assert.deepEqual(r.ecartes, { ids: ['a', 'b'], avant: AVANT });
+  // Pile suivante sans aucune d'elles : la liste disparaît.
+  const r2 = appliquerEcartes(pileDe(['n1', 'n3'], [], '2026-02-01T06:00:00Z'), r.ecartes);
+  assert.equal(r2.ecartes, null);
+  assert.deepEqual(r2.pile.cartes.map((c) => c.id), ['n1', 'n3']);
+});
+
+test('appliquerEcartes : sans liste ou pile de démo, rien ne change', () => {
+  const pile = pileDe(['a'], [], '2026-03-01T00:00:00Z');
+  assert.deepEqual(appliquerEcartes(pile, null), { pile, ecartes: null });
+  const demo = { ...pile, source: 'demo' };
+  const ecartes = { ids: ['a'], avant: AVANT };
+  assert.deepEqual(appliquerEcartes(demo, ecartes), { pile: demo, ecartes });
+  assert.deepEqual(appliquerEcartes(pile, { ids: 'abîmé' }), { pile, ecartes: null });
+});
+
+test('fusionnerEcartes : une deuxième remise à zéro ne perd pas les ids de la première', () => {
+  const premiere = fusionnerEcartes(null, ['a', 'b'], AVANT);
+  assert.deepEqual(premiere, { ids: ['a', 'b'], avant: AVANT });
+  const seconde = fusionnerEcartes(premiere, ['b', 'c'], '2026-02-02T00:00:00.000Z');
+  assert.deepEqual(seconde, { ids: ['a', 'b', 'c'], avant: '2026-02-02T00:00:00.000Z' });
+  assert.equal(fusionnerEcartes(null, [], AVANT), null);
+  assert.deepEqual(fusionnerEcartes({ ids: 'abîmé' }, ['d'], AVANT), { ids: ['d'], avant: AVANT });
+  // Après la seconde remise à zéro, une pile générée entre les deux écarte encore a.
+  const r = appliquerEcartes(pileDe(['a', 'c'], [], '2026-02-01T12:00:00Z'), seconde);
+  assert.deepEqual(r.pile.cartes, []);
 });

@@ -2,14 +2,15 @@
 
 import {
   profilParDefaut, prochaines, swiper, annuler, ajouterRaison, echauffementFait, repecher,
-  fusionnerSwipes, nettoyerSwipes, oublierDemo, compacterSwipes, majDispoFavoris, retirerIds,
+  fusionnerSwipes, nettoyerSwipes, oublierDemo, compacterSwipes, majDispoFavoris,
+  appliquerEcartes, fusionnerEcartes,
 } from './paquet.js';
 import { creerStore } from './store.js';
 import { chargerPile } from './pile.js';
 import { viderCacheEmpreintes } from './empreintes.js';
 import {
-  creerClient, versSwipesJson, versProfilJson, envoyerSwipes, envoyerProfil, importerDistants,
-  recolteEnRetard, FICHIERS, ErreurCle, ErreurReseau,
+  creerClient, versSwipesJson, versProfilJson, envoyerSwipes, envoyerProfil, swipesApresImport,
+  recolteEnRetard, finDeCle, FICHIERS, ErreurCle, ErreurReseau,
 } from './synchro.js';
 import { completerProfil } from './formulaire.js';
 import { afficherEcran, majBandeauStockage } from './ecrans.js';
@@ -23,7 +24,8 @@ const CLE_SWIPES = 'sd:swipes';
 // « Tout effacer » la garde.
 const CLE_GITHUB = 'sd:cle';
 const CLE_ANNULES = 'sd:annules'; // [{id, t}] : annulations à faire connaître au dépôt privé
-// {derniereLecture, dernierEnvoi, remisAZero, profilEnAttente, profilModifieLe, recolte}
+// {derniereLecture, dernierEnvoi, remisAZero, profilEnAttente, profilModifieLe, recolte,
+//  echauffementDistant (plancher de echauffement_faits, remis à zéro par « Tout effacer »)}
 const CLE_SYNCHRO = 'sd:synchro';
 // {ids, avant} : cartes déjà vues avant « Tout effacer », écartées des piles générées avant cette date
 const CLE_ECARTES = 'sd:ecartes';
@@ -69,7 +71,7 @@ function etatSynchroInitial() {
   const s = lireEtatSynchro();
   return {
     // 'sans-cle' | 'pret' | 'en-cours' | 'ok' | 'hors-ligne' | 'cle-refusee' | 'erreur'
-    statut: lireCle() ? 'pret' : 'sans-cle',
+    statut: lireCle() !== null ? 'pret' : 'sans-cle',
     derniereLecture: s.derniereLecture ?? null,
     dernierEnvoi: s.dernierEnvoi ?? null,
     recolte: s.recolte ?? null, // contenu de recolte.json (bandeau « récolte en retard »)
@@ -141,6 +143,8 @@ function toutEffacer() {
   // Les annonces déjà vues ne reviennent pas : elles restent écartées des piles déjà générées
   // (le récolteur, lui, ne les repropose plus).
   const dejaVues = etat.swipes.map((s) => s.id).filter((id) => !id.startsWith('demo:'));
+  // Liste d'une remise à zéro précédente : ses ids restent écartés.
+  const ecartesAvant = store.lire(CLE_ECARTES, null);
   try {
     const stockage = globalThis.localStorage;
     const cles = [];
@@ -159,8 +163,9 @@ function toutEffacer() {
   generation++; // un envoi parti avant n'a plus le droit de toucher aux swipes
   envoiNecessaire = false;
   shaPile = null; // sd:pile est effacée : la prochaine lecture la réenregistre
-  if (dejaVues.length > 0) {
-    store.ecrire(CLE_ECARTES, { ids: dejaVues, avant: maintenant });
+  const ecartes = fusionnerEcartes(ecartesAvant, dejaVues, maintenant);
+  if (ecartes) {
+    store.ecrire(CLE_ECARTES, ecartes);
     etat.pile = ecarterDejaVues(pileBrute);
   }
   etat.profil = profilParDefaut();
@@ -227,15 +232,24 @@ async function tache(fn) {
   }
 }
 
-const objetSwipesLocal = () => versSwipesJson(etat.swipes, lireAnnules(), lireEtatSynchro().remisAZero ?? null);
+function objetSwipesLocal() {
+  const s = lireEtatSynchro();
+  return versSwipesJson(etat.swipes, lireAnnules(), s.remisAZero ?? null, {
+    plancherEchauffement: s.echauffementDistant ?? 0,
+  });
+}
 
 // Les swipes que swipes.json connaît en plus (autre appareil, stockage perdu) sont ajoutés ici
-// sans carte : ces annonces ne sont jamais remontrées.
+// sans carte : ces annonces ne sont jamais remontrées. Écriture directe (pas de sauverSwipes, dont
+// la fusion mettrait les importés en dernier) : ils restent en tête, et « annuler » vise toujours
+// le dernier swipe fait sur ce téléphone.
 function appliquerDistant(objetFinal) {
-  const avec = importerDistants(etat.swipes, objetFinal, lireAnnules());
-  if (avec === etat.swipes) return;
-  const locaux = new Set(etat.swipes.map((s) => s.id));
-  sauverSwipes(avec, { modifies: avec.filter((s) => !locaux.has(s.id)).map((s) => s.id) });
+  const stockes = lireSwipes();
+  const avec = swipesApresImport(stockes, objetFinal, lireAnnules());
+  if (avec === stockes) return;
+  etat.swipes = avec;
+  store.ecrire(CLE_SWIPES, avec);
+  majBandeau();
 }
 
 async function envoyerUneFois(c) {
@@ -251,6 +265,7 @@ async function envoyerUneFois(c) {
   try {
     const { objetFinal } = await envoyerSwipes(c, objetSwipesLocal());
     if (gen !== generation) return; // « Tout effacer » entre-temps : l'envoi suivant remet à zéro
+    ecrireEtatSynchro({ echauffementDistant: objetFinal.echauffement_faits });
     appliquerDistant(objetFinal);
   } catch (e) {
     if (gen === generation) envoiNecessaire = true;
@@ -402,6 +417,8 @@ const actionsSynchro = {
     majSynchro({ statut: 'sans-cle', erreur: null });
     chargerLaPile().catch((e) => console.error('Rechargement de la pile impossible', e?.name));
   },
+  /** Les 4 derniers caractères de la clé enregistrée ('' sans clé) : seule partie montrable. */
+  finCle: () => finDeCle(lireCle()),
   synchroniser: () => synchroniser({ forcer: true }),
   recolteEnRetard: () => lireCle() !== null && recolteEnRetard(etat.synchro.recolte),
 };
@@ -630,17 +647,18 @@ function redessiner() {
 
 // --- Démarrage ---
 
-// Cartes déjà vues avant « Tout effacer » : écartées des piles générées avant cette date.
-// Une pile générée après (le récolteur ne les repropose plus) rend la liste inutile.
+// Cartes déjà vues avant « Tout effacer » : écartées de chaque pile (voir appliquerEcartes).
+// Une pile générée après la remise à zéro réduit la liste aux ids qu'elle contient encore ;
+// la clé disparaît quand la liste est vide.
 function ecarterDejaVues(pile) {
-  const ecartes = objetOuVide(store.lire(CLE_ECARTES, null));
-  if (!Array.isArray(ecartes.ids) || pile.source === 'demo') return pile;
-  const genereLe = Date.parse(pile.genere_le ?? '');
-  if (Number.isFinite(genereLe) && genereLe >= Date.parse(ecartes.avant ?? '')) {
-    store.effacer(CLE_ECARTES);
-    return pile;
+  const avant = store.lire(CLE_ECARTES, null);
+  const { pile: filtree, ecartes } = appliquerEcartes(pile, avant);
+  if (ecartes === null) {
+    if (avant !== null) store.effacer(CLE_ECARTES);
+  } else if (ecartes !== avant) {
+    store.ecrire(CLE_ECARTES, ecartes);
   }
-  return retirerIds(pile, new Set(ecartes.ids));
+  return filtree;
 }
 
 function installerPile(pile, { redessiner: redessinerEcran = true } = {}) {

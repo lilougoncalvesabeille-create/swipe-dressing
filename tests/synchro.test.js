@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {
   DEPOT, creerClient, ErreurCle, ErreurConflit, ErreurReseau,
   versSwipesJson, depuisSwipesJson, fusionnerDistant, envoyerSwipes, envoyerProfil,
-  importerDistants, recolteEnRetard,
+  importerDistants, recolteEnRetard, swipesApresImport, finDeCle,
 } from '../js/synchro.js';
+import { swiper, annuler, ajouterRaison, fusionnerSwipes } from '../js/paquet.js';
 
 const CLE = 'github_pat_CLE_SECRETE_123';
 const URL_BASE = `https://api.github.com/repos/${DEPOT}/contents/`;
@@ -368,4 +369,79 @@ test('recolteEnRetard : bloquée, en erreur ou plus vieille que 24 h', () => {
   assert.equal(r('ok', '2026-01-01T11:00:00Z'), true);
   assert.equal(r('ok', 'pas une date'), true);
   assert.equal(recolteEnRetard(null, maintenant), false);
+});
+
+// --- Tour 1 de relecture ---
+
+test('403 avec retry-after (limite secondaire de GitHub) → ErreurReseau, pas ErreurCle', async () => {
+  const { fetch } = fauxFetch(() => reponse(403, { json: {}, entetes: { 'retry-after': '60' } }));
+  const client = creerClient({ cle: CLE, fetch });
+  await assert.rejects(client.lire('pile.json'), (e) => e instanceof ErreurReseau && !(e instanceof ErreurCle));
+  await assert.rejects(client.ecrire('swipes.json', {}, 's', 'm'), ErreurReseau);
+  const r = await client.tester();
+  assert.equal(r.ok, false);
+  assert.equal(r.raison, 'reseau');
+});
+
+test('swipesApresImport : les swipes importés ne deviennent jamais « le dernier » (annuler vise le vrai dernier)', () => {
+  const carte = (id) => ({ id, titre: id, prix: 1, categorie: 'pull', emb: 'AA==' });
+  let locaux = swiper([], carte('vinted:a'), 'droite', { maintenant: new Date('2026-01-01T00:00:01Z') });
+  locaux = swiper(locaux, carte('vinted:b'), 'gauche', { maintenant: new Date('2026-01-01T00:00:02Z') });
+  // y a été swipé ailleurs APRÈS b : il ne doit pas pour autant passer en dernier.
+  const final = objet([sw('vinted:x', '2026-01-01T00:00:00Z'), sw('vinted:y', '2026-01-01T00:00:09Z', { sens: 'gauche' })]);
+  const r = swipesApresImport(locaux, final, []);
+  assert.deepEqual(r.map((s) => s.id), ['vinted:x', 'vinted:y', 'vinted:a', 'vinted:b']);
+  assert.equal(r.at(-1).id, 'vinted:b');
+  // ↶ enlève le dernier swipe de l'utilisateur, pas une carte importée sans carte.
+  assert.deepEqual(annuler(r).map((s) => s.id), ['vinted:x', 'vinted:y', 'vinted:a']);
+  // La raison du refus s'applique bien au dernier swipe.
+  assert.equal(ajouterRaison(r, 'vinted:b', 'prix').at(-1).raison, 'prix');
+  // Un enregistrement suivant (fusion avec le stockage) garde cet ordre.
+  assert.deepEqual(fusionnerSwipes(r, r).map((s) => s.id), r.map((s) => s.id));
+  // Rien à importer : le même tableau.
+  assert.equal(swipesApresImport(r, final, []), r);
+});
+
+test('echauffement_faits ne baisse pas après un import : la dernière valeur distante sert de plancher', async () => {
+  const echauffes = Array.from({ length: 15 }, (_, i) => sw(`vinted:e${i}`, `2026-01-01T00:00:${String(i + 10)}Z`));
+  const depot = fauxDepot({ 'swipes.json': { texte: JSON.stringify(objet(echauffes, { echauffement_faits: 15 })), sha: 's0' } });
+  const client = creerClient({ cle: CLE, fetch: depot.fetch });
+  // Téléphone neuf : il récupère les 15 swipes d'échauffement, sans leur marque d'échauffement.
+  const { objetFinal } = await envoyerSwipes(client, versSwipesJson([], [], null));
+  const plancher = objetFinal.echauffement_faits;
+  assert.equal(plancher, 15);
+  let locaux = swipesApresImport([], objetFinal, []);
+  locaux = [...locaux, { id: 'vinted:n', sens: 'droite', t: '2026-01-02T00:00:00Z', echauffement: false, carte: {} }];
+  // Sans plancher, le téléphone (activité la plus récente) ferait redescendre le compte à 0.
+  assert.equal(versSwipesJson(locaux, [], null).echauffement_faits, 0);
+  const local = versSwipesJson(locaux, [], null, { plancherEchauffement: plancher });
+  assert.equal(local.echauffement_faits, 15);
+  await envoyerSwipes(client, local);
+  assert.equal(JSON.parse(depot.etat.fichiers['swipes.json'].texte).echauffement_faits, 15);
+  // Le plancher ne fait jamais baisser un compte local plus grand.
+  const plus = Array.from({ length: 17 }, (_, i) => ({
+    id: `vinted:p${i}`, sens: 'droite', t: `2026-01-03T00:00:${String(i + 10)}Z`, echauffement: true,
+  }));
+  assert.equal(versSwipesJson(plus, [], null, { plancherEchauffement: 15 }).echauffement_faits, 17);
+});
+
+test('finDeCle : seulement les 4 derniers caractères, jamais plus', () => {
+  assert.equal(finDeCle(CLE), CLE.slice(-4));
+  assert.equal(finDeCle(CLE).length, 4);
+  assert.equal(finDeCle(null), '');
+  assert.equal(finDeCle(''), '');
+  assert.equal(finDeCle('abcdef'), ''); // clé trop courte : 4 caractères en diraient trop
+  assert.equal(finDeCle(12345678), '');
+});
+
+test('main.js n\'expose la clé que par finDeCle (4 derniers caractères)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const main = readFileSync('js/main.js', 'utf8');
+  assert.match(main, /finCle: \(\) => finDeCle\(lireCle\(\)\)/);
+  // lireCle() ne sert qu'à créer le client, à tester la présence d'une clé, ou à finDeCle.
+  const usages = main.split('\n').filter((l) => l.includes('lireCle()'));
+  assert.ok(usages.length > 0);
+  for (const ligne of usages) {
+    assert.match(ligne, /^function lireCle\(\) \{$|const cle = lireCle\(\);|lireCle\(\) !== null|!lireCle\(\)|if \(lireCle\(\)\)|finDeCle\(lireCle\(\)\)/, ligne);
+  }
 });

@@ -4,7 +4,7 @@
 // La clé GitHub n'apparaît que dans l'en-tête `Authorization` : jamais dans une URL, un corps de
 // requête, un message d'erreur ou un journal.
 
-import { echauffementFait } from './paquet.js';
+import { echauffementFait, compacterSwipes } from './paquet.js';
 
 export const DEPOT = 'lilougoncalvesabeille-create/swipe-dressing-donnees';
 const URL_DEPOT = `https://api.github.com/repos/${DEPOT}`;
@@ -86,12 +86,17 @@ export function creerClient({ cle, fetch: f = globalThis.fetch?.bind(globalThis)
   function verifier(r, quoi) {
     if (r.status === 401) throw new ErreurCle(`Clé GitHub refusée (${quoi})`);
     if (r.status === 403 || r.status === 429) {
-      if (r.status === 429 || r.headers?.get?.('x-ratelimit-remaining') === '0') {
+      if (r.status === 429 || limiteDeRequetes(r)) {
         throw new ErreurReseau(`Limite de requêtes GitHub atteinte, réessai plus tard (${quoi})`);
       }
       throw new ErreurCle(`La clé GitHub n'a pas les droits sur le dépôt de données (${quoi})`);
     }
     if (!r.ok) throw new ErreurReseau(`Erreur GitHub ${r.status} (${quoi})`);
+  }
+
+  // 403 temporaire : limite principale (x-ratelimit-remaining: 0) ou secondaire (retry-after).
+  function limiteDeRequetes(r) {
+    return r.headers?.get?.('x-ratelimit-remaining') === '0' || r.headers?.get?.('retry-after') != null;
   }
 
   async function corpsJson(r, quoi) {
@@ -162,7 +167,7 @@ export function creerClient({ cle, fetch: f = globalThis.fetch?.bind(globalThis)
     if (r.status === 401) {
       return { ok: false, raison: 'cle', message: 'Clé refusée par GitHub : elle est mal copiée, invalide ou a expiré.' };
     }
-    if (r.status === 403 && r.headers?.get?.('x-ratelimit-remaining') === '0') {
+    if (r.status === 429 || (r.status === 403 && limiteDeRequetes(r))) {
       return { ok: false, raison: 'reseau', message: 'Trop de requêtes vers GitHub : réessaie dans une heure.' };
     }
     if (r.status === 403 || r.status === 404) {
@@ -195,8 +200,13 @@ function swipeCompact(s) {
   return r;
 }
 
-/** Swipes de l'appli (avec carte et empreinte) → objet swipes.json compact, sans la démo. */
-export function versSwipesJson(swipes, annules = [], remisAZero = null) {
+/**
+ * Swipes de l'appli (avec carte et empreinte) → objet swipes.json compact, sans la démo.
+ * `plancherEchauffement` : dernière valeur de echauffement_faits lue dans le dépôt (depuis la
+ * dernière remise à zéro). Les swipes importés d'ailleurs n'ont pas la marque d'échauffement : sans
+ * ce plancher, le téléphone ferait baisser le compte du dépôt.
+ */
+export function versSwipesJson(swipes, annules = [], remisAZero = null, { plancherEchauffement = 0 } = {}) {
   const reels = (Array.isArray(swipes) ? swipes : []).filter((s) => swipeLisible(s) && !estDemo(s.id));
   return {
     version: 1,
@@ -205,7 +215,10 @@ export function versSwipesJson(swipes, annules = [], remisAZero = null) {
       .filter((a) => annuleLisible(a) && !estDemo(a.id))
       .map((a) => ({ id: a.id, t: a.t })),
     remis_a_zero: texte(remisAZero) ? remisAZero : null,
-    echauffement_faits: echauffementFait(reels),
+    echauffement_faits: Math.max(
+      echauffementFait(reels),
+      Number.isInteger(plancherEchauffement) && plancherEchauffement > 0 ? plancherEchauffement : 0,
+    ),
   };
 }
 
@@ -351,6 +364,21 @@ export function importerDistants(swipes, objetFinal, annules = []) {
     .filter((s) => !vus.has(s.id) && !((annulesIci.get(s.id) ?? -Infinity) >= dateSwipe(s)))
     .map((s) => ({ ...s, distant: true }));
   return nouveaux.length > 0 ? [...nouveaux, ...swipes] : swipes;
+}
+
+/**
+ * Swipes à enregistrer après un envoi : ceux du stockage, précédés des swipes importés, puis
+ * compactés. Les importés restent en tête : « annuler » et la raison du refus visent toujours le
+ * dernier swipe fait sur ce téléphone. Renvoie le même tableau si rien n'est importé.
+ */
+export function swipesApresImport(stockes, objetFinal, annules = []) {
+  const avec = importerDistants(stockes, objetFinal, annules);
+  return avec === stockes ? stockes : compacterSwipes(avec);
+}
+
+/** Les 4 derniers caractères de la clé (pour la reconnaître dans Réglages), '' sinon. */
+export function finDeCle(cle) {
+  return typeof cle === 'string' && cle.length >= 8 ? cle.slice(-4) : '';
 }
 
 /**
