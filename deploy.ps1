@@ -7,6 +7,12 @@ $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 Set-Location $root
 
+# Mise en ligne seulement depuis la branche main, avant de toucher à quoi que ce soit.
+$branche = git rev-parse --abbrev-ref HEAD
+if ($LASTEXITCODE -ne 0 -or "$branche".Trim() -ne 'main') {
+  throw "Mise en ligne refusée : la branche actuelle est « $branche », pas « main ». Fusionne ton travail dans main, fais « git checkout main », puis relance deploy.ps1."
+}
+
 $sw = Join-Path $root 'sw.js'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $swText = [IO.File]::ReadAllText($sw) -replace "const VERSION = '[^']*';", "const VERSION = 'swipe-dressing-$stamp';"
