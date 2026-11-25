@@ -4,7 +4,7 @@
 
 import { el, enregistrerEcran, photoAvecRepli } from './ecrans.js';
 import { RAISONS, LIBELLES_RAISONS, SEUIL_ECHAUFFEMENT, garderEnTete } from './paquet.js';
-import { formaterPrix, libelleTaille, libelleSite } from './fiche.js';
+import { formaterPrix, libelleTaille, libelleSite, textesPileVide } from './fiche.js';
 import { vitesseX, decisionSwipe, estUnTap, rotation, intensite } from './geste.js';
 import { messageRecolte, MESSAGES_RECOLTE } from './synchro.js';
 
@@ -58,6 +58,8 @@ function construireCarte(entree, active) {
  *   auElargir()                       bouton « Élargir mes critères » de la pile vide
  *   indisponible() -> boolean         la pile n'a pas pu être chargée (pile vide = « Réessayer »)
  *   auReessayer()                     bouton « Réessayer » de la pile indisponible
+ *   cleRefusee() -> boolean           la clé GitHub est refusée (pile vide = « vérifie-la dans Réglages »)
+ *   auReglages()                      bouton « Ouvrir les Réglages » de la clé refusée
  *   idDessus                          carte à remettre sur le dessus au montage (si encore dans la suite)
  *   auDessus(id | null)               appelé à chaque changement de la carte du dessus
  */
@@ -66,6 +68,7 @@ export function monterPile(conteneur, options) {
     suivantes, auSwipe, auAnnuler,
     auRaison = () => {}, peutAnnuler = () => false, echauffementFait = () => 0, vraisSwipes = () => 0,
     auElargir = null, indisponible = () => false, auReessayer = null,
+    cleRefusee = () => false, auReglages = null,
     idDessus = null, auDessus = () => {},
   } = options;
 
@@ -137,22 +140,34 @@ export function monterPile(conteneur, options) {
     }
   }
 
+  // Textes de la pile vide du moment (clé refusée, pile indisponible ou plus de cartes).
+  const textesVide = () => textesPileVide({ cleRefusee: cleRefusee(), indisponible: indisponible() });
+  const BOUTONS_VIDE = {
+    reglages: [auReglages, 'Ouvrir les Réglages'],
+    reessayer: [auReessayer, 'Réessayer'],
+    elargir: [auElargir, 'Élargir mes critères'],
+  };
+  let actionVide = null; // action de la pile vide affichée (null : une carte est affichée)
+
   function pileVide() {
-    if (indisponible()) {
-      return el('div', { class: 'pile-vide' },
-        el('p', { class: 'pile-vide-titre' }, "Annonces indisponibles pour l'instant."),
-        el('p', { class: 'aide' }, 'Vérifie ta connexion puis réessaie.'),
-        auReessayer
-          ? el('button', { type: 'button', class: 'bouton bouton-principal', onclick: () => auReessayer() }, 'Réessayer')
-          : null);
-    }
+    const { titre, aide, action } = textesVide();
+    const [rappel, libelle] = BOUTONS_VIDE[action];
+    actionVide = action;
     return el('div', { class: 'pile-vide' },
-      el('p', { class: 'pile-vide-titre' }, 'Plus de cartes pour l\'instant'),
-      el('p', { class: 'aide' }, 'Élargis ta taille, ton budget ou tes catégories pour en voir d’autres.'),
-      auElargir
-        ? el('button', { type: 'button', class: 'bouton bouton-principal', onclick: () => auElargir() }, 'Élargir mes critères')
+      el('p', { class: 'pile-vide-titre' }, titre),
+      el('p', { class: 'aide' }, aide),
+      rappel
+        ? el('button', { type: 'button', class: 'bouton bouton-principal', onclick: () => rappel() }, libelle)
         : null);
   }
+
+  // Le statut de la synchronisation change après le dessin (clé refusée découverte ensuite) :
+  // la pile vide est redessinée si son message n'est plus le bon.
+  function auChangementSynchro() {
+    if (detruit || carteActive || actionVide === null) return;
+    if (textesVide().action !== actionVide) cartes.replaceChildren(pileVide());
+  }
+  window.addEventListener('sd:synchro', auChangementSynchro);
 
   // Recalcule la suite (profil et swipes à jour) et dessine la carte du dessus et celle d'après.
   // `idEnTete` : carte à garder devant si elle est encore dans la suite (celle qui était
@@ -163,6 +178,7 @@ export function monterPile(conteneur, options) {
     pile.style.removeProperty('--progres');
     cartes.replaceChildren();
     carteActive = null;
+    actionVide = null;
     if (dessus) {
       if (derriere) cartes.append(construireCarte(derriere, false));
       const noeud = construireCarte(dessus, true);
@@ -367,6 +383,7 @@ export function monterPile(conteneur, options) {
   return function nettoyer() {
     detruit = true;
     document.removeEventListener('keydown', auClavier);
+    window.removeEventListener('sd:synchro', auChangementSynchro);
     for (const id of minuteries) clearTimeout(id);
     minuteries.clear();
   };
@@ -384,7 +401,8 @@ function monterBandeauRecolte(parent, { etat, synchro } = {}) {
   parent.append(bandeau);
   const maj = () => {
     const message = synchro?.cleEnregistree?.() ? messageRecolte(etat?.synchro?.recolte, new Date()) : null;
-    bandeau.textContent = message ?? '';
+    // Réécrit seulement si le texte change : role=status ne le réannonce pas à chaque synchro.
+    if (bandeau.textContent !== (message ?? '')) bandeau.textContent = message ?? '';
     bandeau.hidden = !message;
     bandeau.classList.toggle('bandeau-recolte-info', message === MESSAGES_RECOLTE.attenteProfil);
   };
@@ -416,6 +434,8 @@ enregistrerEcran('swipe', (conteneur, donnees) => {
     auElargir: donnees.auElargir,
     indisponible: donnees.indisponible,
     auReessayer: donnees.auReessayer,
+    cleRefusee: donnees.cleRefusee,
+    auReglages: donnees.auReglages,
     idDessus: donnees.idDessus,
     auDessus: donnees.auDessus,
   });

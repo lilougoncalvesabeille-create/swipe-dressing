@@ -149,3 +149,26 @@ export function profilAAfficher(aimes, styles) {
   const barres = profilStyle(aimes, styles).map((p) => ({ ...p, libelle: libelleStyle(p.nom) }));
   return barres.length > 0 ? { etat: 'barres', barres } : { etat: 'indisponible' };
 }
+
+/**
+ * Textes de l'écran de swipe sans carte : {titre, aide, action}. `action` dit quel bouton montrer :
+ * 'reglages' (clé GitHub refusée), 'reessayer' (pile indisponible) ou 'elargir' (plus de cartes).
+ * Une clé refusée l'emporte : aucune nouvelle annonce n'arrivera tant qu'elle n'est pas corrigée.
+ */
+export function textesPileVide({ cleRefusee = false, indisponible = false } = {}) {
+  if (cleRefusee) {
+    return {
+      titre: 'Ta clé GitHub a été refusée : vérifie-la dans Réglages.',
+      aide: 'Sans clé valide, les annonces récoltées par le PC ne peuvent pas arriver.',
+      action: 'reglages',
+    };
+  }
+  if (indisponible) {
+    return { titre: "Annonces indisponibles pour l'instant.", aide: 'Vérifie ta connexion puis réessaie.', action: 'reessayer' };
+  }
+  return {
+    titre: 'Plus de cartes pour l\'instant',
+    aide: 'Élargis ta taille, ton budget ou tes catégories pour en voir d’autres.',
+    action: 'elargir',
+  };
+}

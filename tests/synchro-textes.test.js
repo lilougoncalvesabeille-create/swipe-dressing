@@ -5,7 +5,7 @@ import {
   messageRecolte, MESSAGES_RECOLTE, recolteEnRetard, texteEtatSynchro, retourCle, problemeSaisieCle,
   ETAPES_CLE, CLE_REFUSEE, MODE_DEMO,
 } from '../js/synchro.js';
-import { ilYA } from '../js/fiche.js';
+import { ilYA, textesPileVide } from '../js/fiche.js';
 
 const MAINTENANT = new Date('2026-11-25T12:00:00Z');
 const ilYAH = (h) => new Date(MAINTENANT.getTime() - h * 3600_000).toISOString();
@@ -167,4 +167,23 @@ test('les écrans ne lisent jamais la clé : seulement synchro.finCle()', () => 
   // La seule partie montrée est la fin rendue par finCle(), précédée de « … ».
   assert.match(ecrans, /`Clé enregistrée : …\$\{fin\}`/);
   assert.ok(!/champCle\.value\s*=\s*[^'\s]/.test(ecrans), 'le champ de la clé est rempli par le code');
+});
+
+// --- Écran de swipe sans carte ---
+
+test("textesPileVide : clé refusée → « vérifie-la dans Réglages », elle l'emporte sur la pile indisponible", () => {
+  const refusee = textesPileVide({ cleRefusee: true, indisponible: true });
+  assert.equal(refusee.titre, 'Ta clé GitHub a été refusée : vérifie-la dans Réglages.');
+  assert.equal(refusee.action, 'reglages');
+  assert.equal(textesPileVide({ cleRefusee: true }).action, 'reglages');
+  assert.ok(!/connexion/i.test(refusee.titre + refusee.aide));
+});
+
+test('textesPileVide : pile indisponible et plus de cartes gardent les textes de la phase 1', () => {
+  assert.deepEqual(textesPileVide({ indisponible: true }), {
+    titre: "Annonces indisponibles pour l'instant.", aide: 'Vérifie ta connexion puis réessaie.', action: 'reessayer',
+  });
+  const vide = textesPileVide();
+  assert.equal(vide.titre, "Plus de cartes pour l'instant");
+  assert.equal(vide.action, 'elargir');
 });

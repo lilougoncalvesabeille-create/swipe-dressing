@@ -202,8 +202,13 @@ const client = () => {
 };
 
 // Met à jour etat.synchro et prévient les écrans (événement « sd:synchro » sur window).
+// Dernier statut hors « en-cours » : la pile vide de l'écran de swipe ne change pas de message
+// pendant une relecture (clé refusée → « en-cours » → clé refusée).
+let statutStable = etat.synchro.statut;
+
 function majSynchro(changements) {
   Object.assign(etat.synchro, changements);
+  if (etat.synchro.statut !== 'en-cours') statutStable = etat.synchro.statut;
   try {
     window.dispatchEvent(new CustomEvent('sd:synchro'));
   } catch {
@@ -404,10 +409,15 @@ const actionsSynchro = {
     synchroniser({ forcer: true });
     return { ...resultat, enregistree: true };
   },
+  /** Teste la clé enregistrée ; refusée ou sans accès → statut 'cle-refusee' (ligne d'état à jour). */
   testerCle: async () => {
     const c = client();
     if (!c) return { ok: false, raison: 'cle', message: 'Aucune clé enregistrée.' };
-    return c.tester();
+    const resultat = await c.tester();
+    if (resultat.raison === 'cle' || resultat.raison === 'acces') {
+      majSynchro({ statut: 'cle-refusee', erreur: resultat.message });
+    }
+    return resultat;
   },
   /** Oublie la clé : retour au mode démo. */
   oublierCle: () => {
@@ -531,6 +541,8 @@ const donneesPour = {
     vraisSwipes: () => etat.swipes.length - echauffementFait(etat.swipes),
     auElargir: () => naviguer('reglages'),
     indisponible: pileIndisponible,
+    cleRefusee: () => lireCle() !== null && statutStable === 'cle-refusee',
+    auReglages: () => naviguer('reglages'),
     auReessayer: () => {
       etat.pileChargee = false;
       naviguer('swipe');

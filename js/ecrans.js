@@ -392,7 +392,9 @@ function sectionSynchro(synchro, etat) {
   const boutonRetirer = el('button', { type: 'button', class: 'bouton bouton-secondaire' }, 'Retirer la clé');
 
   let occupe = false;
-  let texteStable = null; // dernier état affiché hors « en-cours » (évite un clignotement à chaque synchro)
+  // Dernier état affiché hors « en-cours » (texte et couleur) : pas de clignotement à chaque synchro.
+  let texteStable = null;
+  let statutStable = null;
 
   function montrerRetour({ texte, detail: precision, erreur }) {
     retour.textContent = texte ?? '';
@@ -407,9 +409,12 @@ function sectionSynchro(synchro, etat) {
     // Le réseau coupé se voit tout de suite, sans attendre la prochaine synchronisation.
     const horsLigne = navigator.onLine === false && etatSynchro.statut !== 'cle-refusee';
     const statut = !avecCle ? 'sans-cle' : horsLigne ? 'hors-ligne' : etatSynchro.statut;
-    if (statut !== 'en-cours' || texteStable === null) texteStable = texteEtatSynchro(statut);
-    ligneEtat.textContent = texteStable;
-    ligneEtat.dataset.statut = statut;
+    if (statut !== 'en-cours' || statutStable === null) {
+      statutStable = statut;
+      texteStable = texteEtatSynchro(statut);
+    }
+    if (ligneEtat.textContent !== texteStable) ligneEtat.textContent = texteStable;
+    ligneEtat.dataset.statut = statutStable;
     const fin = avecCle ? synchro.finCle() : '';
     ligneCle.textContent = fin ? `Clé enregistrée : …${fin}` : 'Clé enregistrée.';
     ligneCle.hidden = !avecCle;
