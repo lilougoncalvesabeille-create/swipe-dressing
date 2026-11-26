@@ -309,9 +309,9 @@ function lire(form) {
 }
 
 // Premier champ invalide d'un ensemble de champs, ou null (son bloc replié est ouvert pour le montrer).
-function premierInvalide(racine) {
+function premierInvalide(racine, { ouvrir = true } = {}) {
   const invalide = [...racine.querySelectorAll('input, select')].find((c) => !c.checkValidity()) ?? null;
-  const repli = invalide?.closest('details');
+  const repli = ouvrir ? invalide?.closest('details') : null;
   if (repli) repli.open = true;
   return invalide;
 }
@@ -378,7 +378,9 @@ export function formulaireProfil(conteneur, profil, auValider, options = {}) {
   }
 
   // Un message « enregistré » disparaît dès qu'on modifie à nouveau un champ.
-  form.addEventListener('input', () => { statut.textContent = ''; });
+  let modifie = false;
+  form.addEventListener('input', () => { statut.textContent = ''; modifie = true; });
+  form.addEventListener('change', () => { modifie = true; });
 
   // Le tableau de tailles de l'aide suit le rayon choisi (homme ou femme).
   form.addEventListener('change', (e) => {
@@ -408,6 +410,7 @@ export function formulaireProfil(conteneur, profil, auValider, options = {}) {
     }
     const nouveau = lireFormulaire(lire(form), profil);
     profil = nouveau;
+    modifie = false;
     auValider(nouveau);
     if (!enEtapes) {
       remplir(form, nouveau);
@@ -419,6 +422,15 @@ export function formulaireProfil(conteneur, profil, auValider, options = {}) {
   remplir(form, profil);
   if (enEtapes) montrerEtape(0);
   else suivant.textContent = libelleValider ?? 'Enregistrer';
+  // Réglages quittés sans « Enregistrer » : les changements valides sont gardés quand même
+  // (un champ invalide les fait abandonner, comme avant). Renvoie true si le profil a été enregistré.
+  form.enregistrerEnPartant = () => {
+    if (enEtapes || !modifie || premierInvalide(form, { ouvrir: false })) return false;
+    modifie = false;
+    auValider(lireFormulaire(lire(form), profil));
+    return true;
+  };
+  form.abandonner = () => { modifie = false; };
   return form;
 }
 
@@ -649,7 +661,8 @@ function sectionSynchro(synchro, etat) {
 
 enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer, synchro, etat }) => {
   conteneur.append(el('header', { class: 'entete' }, titre('Réglages')));
-  formulaireProfil(conteneur, profil, auEnregistrer, { etapes: false, exploration: true, parCategorie: true });
+  const form = formulaireProfil(conteneur, profil, auEnregistrer,
+    { etapes: false, exploration: true, parCategorie: true });
   const zoneSynchro = synchro && etat ? sectionSynchro(synchro, etat) : null;
   if (zoneSynchro) conteneur.append(zoneSynchro.section);
   conteneur.append(
@@ -660,10 +673,14 @@ enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer,
         type: 'button', class: 'bouton bouton-danger',
         onclick: () => {
           if (window.confirm('Tout effacer ? Ton profil, tes favoris et ton historique seront supprimés, ici et sur tes autres appareils reliés. Les annonces déjà vues ne reviendront pas.')) {
+            form.abandonner(); // le formulaire quitté ne doit pas réécrire le profil effacé
             auToutEffacer();
           }
         },
       }, 'Tout effacer')),
   );
-  return zoneSynchro?.nettoyer;
+  return () => {
+    form.enregistrerEnPartant();
+    zoneSynchro?.nettoyer();
+  };
 });

@@ -7,7 +7,6 @@ dispo » sur les favoris, geste « retour » d'Android, message de clé refusée
 maintenue, page restaurée par le bouton retour du navigateur, libellés d'état).
 
 ## Navigation
-- Les modifications non enregistrées dans Réglages sont perdues sans prévenir.
 - « Annuler » peut remonter aux sessions précédentes. C'est une question de choix produit.
 - Après un repêchage, « Annuler » annule le dernier swipe.
 - Après être revenu aux cartes par la barre de navigation depuis Favoris, Historique ou Réglages,
@@ -35,7 +34,8 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
 ## Plusieurs appareils
 - Deux appareils sur des versions différentes peuvent effacer l'un après l'autre la marque
   d'échauffement ou les fiches des refus, jusqu'à ce que les deux soient à jour.
-- Un formulaire de Réglages resté ouvert longtemps peut écraser un profil plus récent venu d'un autre
+- Un formulaire de Réglages resté ouvert longtemps (enregistré, ou quitté après une modification) peut
+  écraser un profil plus récent venu d’un autre
   appareil.
 - Le lien « autre appareil » (#cle=…) peut rester dans l'historique du navigateur et le presse-papiers.
 - Sur iPhone, Safari et l'appli installée sur l'écran d'accueil ont des stockages séparés : la clé est
