@@ -45,5 +45,4 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
 - En local, le service worker sert les fichiers depuis le cache. Pour voir ses modifications, il faut le
   désinscrire ou changer `VERSION` (ou ouvrir l'appli sur http://127.0.0.1 au lieu de localhost).
 - Chaque relance de `premiere-mise-en-ligne.ps1` crée un commit.
-- Sept dessins SVG de démo contiennent un tracé vide.
 - Les apostrophes droites et typographiques sont mélangées.
