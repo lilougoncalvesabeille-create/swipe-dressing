@@ -191,7 +191,7 @@ select {
   background-position: right 12px center;
 }
 
-input::placeholder { color: #6c7986; }
+input::placeholder { color: #7d8a97; } /* contraste 4,9:1 sur --champ */
 
 input:focus-visible, select:focus-visible {
   outline: 2px solid var(--accent);

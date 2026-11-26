@@ -17,9 +17,6 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
 - Pendant l'animation de sortie, un appui sur un bouton en plein glissé provoque un petit défaut visuel.
 - Au clavier, le focus se perd après un swipe.
 
-## Accessibilité
-- Le contraste du texte d'exemple dans les champs est d'environ 4:1.
-
 ## Fiche détail
 - Le bouton « Suivant » du navigateur laisse une entrée morte dans l'historique.
 
