@@ -165,13 +165,30 @@ function refusCompact(s) {
 const dejaCompact = (s) => Object.keys(s).every((k) => CHAMPS_REFUS_COMPACT.includes(k))
   && 'raison' in s && s.echauffement !== false;
 
-/** Renvoie les swipes compactés (même ordre, mêmes ids), ou le même tableau s'il n'y a rien à faire. */
+// Date d'un swipe en ms (le plus récent de t et repeche_le) ; -Infinity si illisible.
+function dateDe(s) {
+  const t = Date.parse(s.t ?? '');
+  const r = Date.parse(s.repeche_le ?? '');
+  const d = Math.max(Number.isFinite(t) ? t : -Infinity, Number.isFinite(r) ? r : -Infinity);
+  return d;
+}
+
+/**
+ * Renvoie les swipes compactés (même ordre, mêmes ids), ou le même tableau s'il n'y a rien à faire.
+ * L'âge se compte à la date du swipe, pas à sa place dans le tableau : les swipes importés d'un
+ * autre appareil sont rangés en tête mais peuvent être récents.
+ */
 export function compacterSwipes(swipes) {
   const n = swipes.length;
   if (n <= GARDER_CARTES) return swipes;
+  // Rang de chaque swipe, du plus récent (0) au plus ancien ; à date égale, le plus loin dans le tableau
+  // est le plus récent (ordre d'origine).
+  const ordre = swipes.map((s, i) => i).sort((a, b) => dateDe(swipes[b]) - dateDe(swipes[a]) || b - a);
+  const rangs = new Array(n);
+  ordre.forEach((i, rang) => { rangs[i] = rang; });
   let change = false;
   const resultat = swipes.map((s, i) => {
-    const rang = n - 1 - i; // 0 : le plus récent
+    const rang = rangs[i]; // 0 : le plus récent
     let r = s;
     if (rang >= GARDER_CARTES && s.sens === 'gauche' && !dejaCompact(s)) r = refusCompact(s);
     if (rang >= GARDER_EMPREINTES && 'emb' in r) {
@@ -233,8 +250,11 @@ export function favoris(swipes) {
     .sort((a, b) => (dateFavori(a) < dateFavori(b) ? 1 : dateFavori(a) > dateFavori(b) ? -1 : 0));
 }
 
+// Historique : le plus récent swipe d'abord (par date : les swipes venus d'un autre appareil sont
+// rangés en tête du tableau mais s'intercalent ici à leur date).
 export function historique(swipes) {
-  return recents(swipes.filter((s) => !s.echauffement && s.carte));
+  return recents(swipes.filter((s) => !s.echauffement && s.carte))
+    .sort((a, b) => dateDe(b) - dateDe(a));
 }
 
 // Empreintes des swipes d'un sens (pour le classement) ; un swipe sans empreinte lisible est ignoré.

@@ -385,9 +385,20 @@ async function adopterProfilDistant(c) {
   if (!choix) return;
   const questionnaireAvant = etat.profil.questionnaireFait;
   const distant = choix.profil;
-  etat.profil = completerProfil('mensurations' in distant ? distant : { ...distant, mensurations: etat.profil.mensurations });
+  // Mensurations vides dans le dépôt (profil envoyé par un appareil où elles n'ont pas été saisies)
+  // et connues ici : gardées, sauf après « Tout effacer » (questionnaire à refaire).
+  const vides = (m) => !m || ['tailleCm', 'poidsKg', 'piedCm'].every((k) => m[k] == null);
+  const garderIci = distant.questionnaireFait === true && vides(distant.mensurations)
+    && !vides(etat.profil.mensurations);
+  etat.profil = completerProfil(garderIci ? { ...distant, mensurations: etat.profil.mensurations } : distant);
   store.ecrire(CLE_PROFIL, etat.profil);
-  ecrireEtatSynchro({ profilModifieLe: choix.modifieLe });
+  if (garderIci) {
+    // Les mensurations d'ici repartent avec le profil : les autres appareils les reçoivent.
+    ecrireEtatSynchro({ profilEnAttente: true, profilModifieLe: new Date().toISOString() });
+    envoyerEnFond();
+  } else {
+    ecrireEtatSynchro({ profilModifieLe: choix.modifieLe });
+  }
   majBandeau();
   if (etat.ecran === 'questionnaire' && etat.profil.questionnaireFait) naviguer('swipe');
   else if (questionnaireAvant && !etat.profil.questionnaireFait) naviguer('questionnaire');

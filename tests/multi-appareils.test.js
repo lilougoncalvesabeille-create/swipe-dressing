@@ -162,3 +162,18 @@ test('tout est partagé : échauffement, historique récent, cartes des vieux re
   const deux = fusionnerDistant(fusionnerDistant(versSwipesJson(beaucoup), null), null);
   assert.deepEqual(deux, fusionnerDistant(versSwipesJson(beaucoup), null));
 });
+
+test('plus de 300 swipes ici : les refus récents venus d’ailleurs restent dans l’Historique, sans réécriture', async () => {
+  const { compacterSwipes, historique } = await import('../js/paquet.js');
+  const { swipesApresImport } = await import('../js/synchro.js');
+  // 400 refus anciens ici, puis 10 refus récents faits sur l'autre appareil.
+  const ici = compacterSwipes(Array.from({ length: 400 }, (_, i) =>
+    refus(`vinted:${5000 + i}`, new Date(Date.UTC(2026, 9, 1) + i * 60_000).toISOString())));
+  const ailleurs = versSwipesJson(Array.from({ length: 10 }, (_, i) =>
+    refus(`vinted:${9000 + i}`, new Date(Date.UTC(2026, 10, 26) + i * 60_000).toISOString())));
+  const apres = swipesApresImport(ici, ailleurs);
+  const h = historique(apres);
+  assert.deepEqual(h.slice(0, 10).map((s) => s.id), Array.from({ length: 10 }, (_, i) => `vinted:${9009 - i}`));
+  assert.equal(swipesApresImport(apres, ailleurs), apres); // second import : rien ne change
+  assert.equal(compacterSwipes(apres), apres);
+});

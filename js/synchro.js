@@ -261,8 +261,8 @@ function bornerCartesRefus(swipes) {
 /**
  * Swipes de l'appli (avec carte et empreinte) → objet swipes.json compact, sans la démo.
  * `plancherEchauffement` : dernière valeur de echauffement_faits lue dans le dépôt (depuis la
- * dernière remise à zéro). Les swipes importés d'ailleurs n'ont pas la marque d'échauffement : sans
- * ce plancher, le téléphone ferait baisser le compte du dépôt.
+ * dernière remise à zéro). Filet de sécurité : la marque d'échauffement voyage avec les swipes,
+ * mais un appareil resté sur une ancienne version a pu l'effacer du dépôt.
  */
 export function versSwipesJson(swipes, annules = [], remisAZero = null, { plancherEchauffement = 0 } = {}) {
   const reels = (Array.isArray(swipes) ? swipes : []).filter((s) => swipeLisible(s) && !estDemo(s.id));
