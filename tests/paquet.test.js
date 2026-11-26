@@ -366,3 +366,12 @@ test('filtrer : les cartes des sites exclus ne sont pas montrées', () => {
   assert.deepEqual(filtrer(cartes, p, new Set()).map((x) => x.carte.id), ['v1']);
   assert.equal(filtrer(cartes, profil(), new Set()).length, 2);
 });
+
+test('trierFavoris : prix croissant/décroissant, plus dispo en fin de liste, récent inchangé', async () => {
+  const { trierFavoris } = await import('../js/paquet.js');
+  const f = (id, prix, dispo = true) => ({ id, carte: { id, prix, dispo } });
+  const liste = [f('a', 30), f('b', 10, false), f('c', 20), f('d', null), f('e', 20)];
+  assert.equal(trierFavoris(liste, 'recent'), liste);
+  assert.deepEqual(trierFavoris(liste, 'prix-croissant').map((s) => s.id), ['c', 'e', 'a', 'd', 'b']);
+  assert.deepEqual(trierFavoris(liste, 'prix-decroissant').map((s) => s.id), ['a', 'c', 'e', 'd', 'b']);
+});

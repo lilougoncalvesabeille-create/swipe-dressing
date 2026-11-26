@@ -30,6 +30,7 @@ const CLE_ANNULES = 'sd:annules'; // [{id, t}] : annulations à faire connaître
 const CLE_SYNCHRO = 'sd:synchro';
 // {ids, avant} : cartes déjà vues avant « Tout effacer », écartées des piles générées avant cette date
 const CLE_ECARTES = 'sd:ecartes';
+const CLE_TRI_FAVORIS = 'sd:tri-favoris'; // tri choisi sur l'écran Favoris (cet appareil)
 const PREFIXE = 'sd:';
 const URL_PILE = 'data/demo-pile.json';
 const DELAI_ENVOI = 5000; // ms après le dernier swipe : les swipes rapprochés partent ensemble
@@ -662,6 +663,9 @@ const donneesPour = {
   }),
   favoris: () => ({
     ouvrirFiche: (id) => ouvrirFiche(id, 'favoris'),
+    // Tri de l'écran Favoris : préférence de cet appareil (pas synchronisée).
+    tri: store.lire(CLE_TRI_FAVORIS, 'recent'),
+    auTri: (tri) => store.ecrire(CLE_TRI_FAVORIS, tri),
   }),
   historique: () => ({
     ouvrirFiche: (id) => ouvrirFiche(id, 'historique'),

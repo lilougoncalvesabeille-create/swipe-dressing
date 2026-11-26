@@ -3,7 +3,7 @@
 // Tout le texte des annonces passe par des nœuds texte (helper `el`), jamais par innerHTML.
 
 import { el, enregistrerEcran, titre, photoAvecRepli } from './ecrans.js';
-import { favoris, historique, empreintes, LIBELLES_RAISONS } from './paquet.js';
+import { favoris, historique, empreintes, LIBELLES_RAISONS, TRIS_FAVORIS, trierFavoris } from './paquet.js';
 import {
   formaterPrix, formaterPct, libelleSite, lignesFiche, photosDe, urlSure, profilAAfficher,
 } from './fiche.js';
@@ -65,8 +65,24 @@ function sectionProfil(swipes, styles) {
 
 // --- Écran Favoris ---
 
-enregistrerEcran('favoris', (conteneur, { etat, ouvrirFiche }) => {
+// Le tri choisi est gardé par main.js (préférence de cet appareil seulement).
+enregistrerEcran('favoris', (conteneur, { etat, ouvrirFiche, tri: triInitial = 'recent', auTri }) => {
   const liste = favoris(etat.swipes);
+  let tri = TRIS_FAVORIS.some((x) => x.valeur === triInitial) ? triInitial : 'recent';
+  const zone = el('div', {});
+  const dessinerGrille = () => {
+    zone.replaceChildren(grille(trierFavoris(liste, tri).map((s) => vignette(s, ouvrirFiche))));
+  };
+  const choixTri = el('select', {
+    id: 'tri-favoris',
+    onchange: (e) => {
+      tri = e.target.value;
+      auTri?.(tri);
+      dessinerGrille();
+    },
+  }, TRIS_FAVORIS.map((t) => el('option', { value: t.valeur }, t.libelle)));
+  choixTri.value = tri;
+  if (liste.length > 0) dessinerGrille();
   conteneur.append(
     el('header', { class: 'entete' },
       titre('Favoris'),
@@ -74,8 +90,11 @@ enregistrerEcran('favoris', (conteneur, { etat, ouvrirFiche }) => {
         ? el('p', { class: 'chapeau' }, liste.length === 1 ? '1 annonce' : `${liste.length} annonces`)
         : null),
     sectionProfil(etat.swipes, etat.pile?.styles ?? []),
+    liste.length > 1
+      ? el('div', { class: 'tri' }, el('label', { for: 'tri-favoris' }, 'Trier'), choixTri)
+      : null,
     liste.length > 0
-      ? grille(liste.map((s) => vignette(s, ouvrirFiche)))
+      ? zone
       : vide('Aucun favori pour l\'instant', 'Swipe à droite les annonces qui te plaisent.'),
   );
 });

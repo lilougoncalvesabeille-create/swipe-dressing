@@ -254,6 +254,33 @@ export function favoris(swipes) {
     .sort((a, b) => (dateFavori(a) < dateFavori(b) ? 1 : dateFavori(a) > dateFavori(b) ? -1 : 0));
 }
 
+// Tris proposés sur l'écran Favoris. Les annonces plus disponibles restent en fin de liste
+// pour les tris par prix (on cherche ce qu'on peut encore acheter).
+export const TRIS_FAVORIS = [
+  { valeur: 'recent', libelle: 'Plus récents' },
+  { valeur: 'prix-croissant', libelle: 'Prix croissant' },
+  { valeur: 'prix-decroissant', libelle: 'Prix décroissant' },
+];
+
+/** Favoris (déjà rangés du plus récent au plus ancien) dans l'ordre `tri` ; tri stable. */
+export function trierFavoris(liste, tri) {
+  if (tri !== 'prix-croissant' && tri !== 'prix-decroissant') return liste;
+  const signe = tri === 'prix-croissant' ? 1 : -1;
+  const prix = (s) => (Number.isFinite(s.carte?.prix) ? s.carte.prix : null);
+  return liste
+    .map((s, i) => ({ s, i }))
+    .sort((a, b) => {
+      const finA = a.s.carte?.dispo === false;
+      const finB = b.s.carte?.dispo === false;
+      if (finA !== finB) return finA ? 1 : -1;
+      const pa = prix(a.s);
+      const pb = prix(b.s);
+      if (pa === null || pb === null) return (pa === null) - (pb === null) || a.i - b.i;
+      return signe * (pa - pb) || a.i - b.i;
+    })
+    .map(({ s }) => s);
+}
+
 // Historique : le plus récent swipe d'abord (par date : les swipes venus d'un autre appareil sont
 // rangés en tête du tableau mais s'intercalent ici à leur date).
 export function historique(swipes) {
