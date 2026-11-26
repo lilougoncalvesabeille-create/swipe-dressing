@@ -182,6 +182,21 @@ enregistrerEcran('detail', (conteneur, donnees) => {
       ? el('a', { class: 'bouton bouton-principal bouton-lien', href: url, target: '_blank', rel: 'noopener' }, 'Voir l\'annonce')
       : el('p', { class: 'aide' }, 'Lien de l’annonce indisponible.'));
 
+  // « Partager » : menu de partage du téléphone (montrer l'article à quelqu'un), s'il existe.
+  if (url && typeof navigator.share === 'function') {
+    actions.append(el('button', {
+      type: 'button',
+      class: 'bouton bouton-secondaire',
+      onclick: async () => {
+        try {
+          await navigator.share({ title: c.titre ?? 'Annonce', url });
+        } catch {
+          // Partage annulé ou refusé : rien à faire.
+        }
+      },
+    }, 'Partager'));
+  }
+
   if (origine === 'historique' && swipe.sens === 'gauche') {
     const repecher = el('button', {
       type: 'button',
