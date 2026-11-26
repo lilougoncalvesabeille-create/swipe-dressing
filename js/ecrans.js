@@ -2,7 +2,7 @@
 // Ce module ne garde aucun état de l'appli : main.js lui passe tout par `donnees`.
 
 import {
-  LETTRES_TAILLE, RAYONS, MODES, LIBELLES_ETATS, CATEGORIES_LISTE, PAYS, BORNES,
+  LETTRES_TAILLE, RAYONS, MODES, LIBELLES_ETATS, CATEGORIES_LISTE, SITES_LISTE, PAYS, BORNES,
   valeursDepuisProfil, lireFormulaire, champBudget, GABARITS, estimerTailles, resumeEstimation,
 } from './formulaire.js';
 import { ETATS } from './paquet.js';
@@ -260,6 +260,14 @@ function etapes({ parCategorie = false } = {}) {
             CATEGORIES_LISTE.map((c) => el('label', { class: 'puce' },
               el('input', { type: 'checkbox', name: 'categories', value: c.valeur }),
               el('span', {}, c.libelle))))),
+        el('fieldset', { class: 'puces-groupe', 'aria-describedby': 'pf-sites-aide' },
+          el('legend', {}, 'Sites'),
+          el('p', { class: 'aide', id: 'pf-sites-aide' },
+            'Où chercher les annonces. Aucune case cochée = tous les sites.'),
+          el('div', { class: 'puces' },
+            SITES_LISTE.map((s) => el('label', { class: 'puce' },
+              el('input', { type: 'checkbox', name: 'sites', value: s.valeur }),
+              el('span', {}, s.libelle))))),
         champ('État minimum (seconde main)', liste('etat-min',
           ETATS.map((e) => ({ valeur: e, libelle: LIBELLES_ETATS[e] ?? e })))),
         champ('Marques préférées', el('input', {
@@ -276,13 +284,17 @@ function etapes({ parCategorie = false } = {}) {
 function remplir(form, profil) {
   const valeurs = valeursDepuisProfil(profil);
   for (const [nom, valeur] of Object.entries(valeurs)) {
-    if (nom === 'categories') continue;
+    if (nom === 'categories' || nom === 'sites') continue;
     const controle = form.elements.namedItem(nom);
     if (controle) controle.value = valeur;
   }
   const choisies = new Set(valeurs.categories);
   for (const caseCat of form.querySelectorAll('input[name="categories"]')) {
     caseCat.checked = choisies.has(caseCat.value);
+  }
+  const sites = new Set(valeurs.sites);
+  for (const caseSite of form.querySelectorAll('input[name="sites"]')) {
+    caseSite.checked = sites.has(caseSite.value);
   }
   const curseur = form.elements.namedItem('exploration');
   if (curseur) curseur.dispatchEvent(new Event('input'));
@@ -292,6 +304,7 @@ function lire(form) {
   const donnees = new FormData(form);
   const valeurs = Object.fromEntries(donnees);
   valeurs.categories = donnees.getAll('categories');
+  if (form.querySelector('input[name="sites"]')) valeurs.sites = donnees.getAll('sites');
   return valeurs;
 }
 

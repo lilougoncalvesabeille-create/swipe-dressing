@@ -39,6 +39,7 @@ test('libelleSite : sites connus, site inconnu avec majuscule', () => {
   assert.equal(libelleSite('vinted'), 'Vinted');
   assert.equal(libelleSite('zalando'), 'Zalando');
   assert.equal(libelleSite('veepee'), 'Veepee');
+  assert.equal(libelleSite('emmaus'), 'Label Emmaüs');
   assert.equal(libelleSite('demo'), 'Démo');
   assert.equal(libelleSite('Vinted'), 'Vinted');
   assert.equal(libelleSite('leboncoin'), 'Leboncoin');

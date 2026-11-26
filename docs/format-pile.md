@@ -8,7 +8,7 @@ Contrat entre le récolteur (phase 2) et l'application. La pile est un fichier J
   "styles":       [ {"nom": "streetwear", "emb": "<base64 int8>"} , … ],
   "echauffement": [ Carte, … ],
   "cartes":       [ Carte, … ] }
-Carte = { "id": "vinted:123", "site": "vinted"|"zalando"|"veepee"|"demo",
+Carte = { "id": "vinted:123", "site": "vinted"|"emmaus"|"zalando"|"veepee"|"demo",
   "titre": str, "description": str, "prix": number (euros), "categorie": clé de CATEGORIES,
   "rayon": "homme"|"femme"|"mixte"|null (facultatif),
   "marque": str|null, "etat": "neuf-etiquette"|"neuf"|"tres-bon"|"bon"|"satisfaisant"|null,

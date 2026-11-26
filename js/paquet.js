@@ -34,6 +34,9 @@ export function profilParDefaut() {
     region: '',
     budget: { max: 60, parCategorie: {} },
     categories: [],
+    // Sites dont on ne veut pas les annonces (vide : tous). Une liste d'exclusions plutôt que
+    // de sites choisis : un nouveau site ajouté au récolteur est proposé d'office.
+    sitesExclus: [],
     etatMin: 'bon',
     marquesPreferees: [],
     marquesBannies: [],
@@ -56,6 +59,7 @@ export function filtrer(cartes, profil, vus) {
   for (const carte of cartes) {
     if (vus.has(carte.id)) continue;
     if (carte.dispo === false) continue;
+    if (profil.sitesExclus?.includes(carte.site)) continue;
     if (!rayonCompatible(carte, profil)) continue;
     const plafond = profil.budget.parCategorie?.[carte.categorie] ?? profil.budget.max;
     if (!(carte.prix <= plafond)) continue;

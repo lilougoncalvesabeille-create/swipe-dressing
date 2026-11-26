@@ -19,6 +19,7 @@ const LIBELLES_SITE = {
   vinted: 'Vinted',
   zalando: 'Zalando',
   veepee: 'Veepee',
+  emmaus: 'Label Emmaüs',
   demo: 'Démo',
 };
 

@@ -577,6 +577,20 @@ function quitterFiche() {
   }
 }
 
+// Favoris, Historique et Réglages ouverts depuis l'écran de swipe ajoutent eux aussi une entrée
+// (une seule) : le geste « retour » y ramène aux cartes au lieu de fermer l'appli.
+const ECRANS_SECONDAIRES = new Set(['favoris', 'historique', 'reglages']);
+
+function noterEcranSecondaire(depuis, cible) {
+  if (depuis !== 'swipe' || !ECRANS_SECONDAIRES.has(cible)) return;
+  if (history.state?.sdEcran || history.state?.sdFiche) return;
+  try {
+    history.pushState({ sdEcran: true }, '');
+  } catch {
+    // Historique indisponible : la barre de navigation suffit.
+  }
+}
+
 window.addEventListener('popstate', () => {
   retourEnCours = false;
   if (ignorerPopstate) {
@@ -584,6 +598,7 @@ window.addEventListener('popstate', () => {
     return;
   }
   if (etat.ecran === 'detail') revenirDeFiche();
+  else if (ECRANS_SECONDAIRES.has(etat.ecran) && !history.state?.sdEcran) naviguer('swipe');
 });
 
 function auRepecher(id) {
@@ -684,6 +699,7 @@ function lireEtRetirer(nom) {
 
 function naviguer(nom, extra = {}) {
   const cible = !etat.profil.questionnaireFait ? 'questionnaire' : nom;
+  noterEcranSecondaire(etat.ecran, cible);
   etat.ecran = cible;
   afficherEcran(cible, {
     etat,

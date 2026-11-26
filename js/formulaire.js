@@ -39,6 +39,12 @@ export const CATEGORIES_LISTE = Object.keys(CATEGORIES).map((valeur) => ({
   libelle: LIBELLES_CATEGORIES[valeur] ?? valeur.charAt(0).toUpperCase() + valeur.slice(1),
 }));
 
+// Sites que le récolteur parcourt (Réglages → « Sites »).
+export const SITES_LISTE = [
+  { valeur: 'vinted', libelle: 'Vinted' },
+  { valeur: 'emmaus', libelle: 'Label Emmaüs' },
+];
+
 export const PAYS = [
   { valeur: 'FR', libelle: 'France' },
   { valeur: 'BE', libelle: 'Belgique' },
@@ -216,6 +222,8 @@ export function completerProfil(lu) {
       parCategorie: budgetsValides(b.parCategorie),
     },
     categories: Array.isArray(lu.categories) ? [...lu.categories] : [],
+    sitesExclus: Array.isArray(lu.sitesExclus)
+      ? [...new Set(lu.sitesExclus.filter((s) => typeof s === 'string' && s))] : [],
     marquesPreferees: Array.isArray(lu.marquesPreferees) ? [...lu.marquesPreferees] : [],
     marquesBannies: Array.isArray(lu.marquesBannies) ? [...lu.marquesBannies] : [],
     exploration: typeof lu.exploration === 'number' ? lu.exploration : d.exploration,
@@ -251,6 +259,7 @@ export function valeursDepuisProfil(profil) {
     ...Object.fromEntries(Object.keys(CATEGORIES)
       .map((c) => [champBudget(c), texteDe(p.budget.parCategorie[c])])),
     categories: [...p.categories],
+    sites: SITES_LISTE.map((s) => s.valeur).filter((s) => !p.sitesExclus.includes(s)),
     'etat-min': p.etatMin,
     'marques-preferees': p.marquesPreferees.join(', '),
     'marques-bannies': p.marquesBannies.join(', '),
@@ -318,6 +327,15 @@ export function lireFormulaire(valeurs, base = profilParDefaut()) {
   if (a('categories')) {
     const liste = Array.isArray(v.categories) ? v.categories : [v.categories];
     p.categories = [...new Set(liste.filter((c) => typeof c === 'string' && c in CATEGORIES))];
+  }
+  // Sites cochés → sites exclus. Aucun coché : tous (sinon plus aucune carte).
+  if (a('sites')) {
+    const liste = Array.isArray(v.sites) ? v.sites : [v.sites];
+    const coches = new Set(liste.filter((s) => typeof s === 'string'));
+    const exclus = SITES_LISTE.map((s) => s.valeur).filter((s) => !coches.has(s));
+    // Un site inconnu de cette version (exclu ailleurs) reste exclu.
+    const inconnus = p.sitesExclus.filter((s) => !SITES_LISTE.some((x) => x.valeur === s));
+    p.sitesExclus = exclus.length === SITES_LISTE.length ? inconnus : [...exclus, ...inconnus];
   }
   if (a('etat-min') && ETATS.includes(v['etat-min'])) p.etatMin = v['etat-min'];
   if (a('marques-preferees')) p.marquesPreferees = listeMarques(v['marques-preferees']);

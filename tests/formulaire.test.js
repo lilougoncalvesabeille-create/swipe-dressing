@@ -141,3 +141,20 @@ test('completerProfil : budget par catégorie lu du stockage, valeurs invalides 
   const p = completerProfil({ budget: { max: 50, parCategorie: { pull: 20, robe: '30', truc: 10, sac: -5 } } });
   assert.deepEqual(p.budget.parCategorie, { pull: 20 });
 });
+
+test('sites : tous cochés par défaut, décocher exclut, rien de coché = tous', async () => {
+  const { SITES_LISTE } = await import('../js/formulaire.js');
+  const tous = SITES_LISTE.map((s) => s.valeur);
+  assert.deepEqual(valeursDepuisProfil(profilParDefaut()).sites, tous);
+  const sansEmmaus = lireFormulaire({ sites: ['vinted'] });
+  assert.deepEqual(sansEmmaus.sitesExclus, ['emmaus']);
+  assert.deepEqual(valeursDepuisProfil(sansEmmaus).sites, ['vinted']);
+  assert.deepEqual(lireFormulaire({ sites: [] }, sansEmmaus).sitesExclus, []);
+  assert.deepEqual(lireFormulaire({ sites: 'emmaus' }).sitesExclus, ['vinted']);
+  // Champ absent : la valeur de base est gardée.
+  assert.deepEqual(lireFormulaire({ age: '20' }, sansEmmaus).sitesExclus, ['emmaus']);
+  // Un site inconnu de cette version, exclu ailleurs, le reste.
+  const base = completerProfil({ ...profilParDefaut(), sitesExclus: ['zalando', 7, ''] });
+  assert.deepEqual(base.sitesExclus, ['zalando']);
+  assert.deepEqual(lireFormulaire({ sites: tous }, base).sitesExclus, ['zalando']);
+});

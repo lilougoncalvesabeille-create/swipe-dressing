@@ -359,3 +359,10 @@ test("prochaines : l'échauffement respecte aussi le rayon", () => {
   p.rayon = 'homme';
   assert.deepEqual(ids(prochaines(pile, p, [], () => 0.3)), ['e:2', 'e:3']);
 });
+
+test('filtrer : les cartes des sites exclus ne sont pas montrées', () => {
+  const p = { ...profil(), sitesExclus: ['emmaus'] };
+  const cartes = [carte('v1', { site: 'vinted' }), carte('e2', { site: 'emmaus' })];
+  assert.deepEqual(filtrer(cartes, p, new Set()).map((x) => x.carte.id), ['v1']);
+  assert.equal(filtrer(cartes, profil(), new Set()).length, 2);
+});
