@@ -10,7 +10,7 @@ export const CATEGORIES = {
   casquette: 'unique', ceinture: 'unique', sac: 'unique',
 };
 
-const LETTRES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+export const LETTRES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const ALIAS = { '2XL': 'XXL', '3XL': 'XXXL' };
 const PAS = { lettres: 1, eu: 2, w: 1, pointure: 1 };
 const EPSILON = 1e-9;

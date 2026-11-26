@@ -2,9 +2,9 @@
 // Module pur (sans DOM) : convertit les valeurs brutes des champs en profil, et inversement.
 
 import { profilParDefaut, ETATS } from './paquet.js';
-import { CATEGORIES } from './tailles.js';
+import { CATEGORIES, LETTRES } from './tailles.js';
 
-export const LETTRES_TAILLE = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+export const LETTRES_TAILLE = LETTRES; // même liste que la lecture des tailles (tailles.js)
 
 export const RAYONS = [
   { valeur: 'homme', libelle: 'Homme' },
