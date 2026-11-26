@@ -196,10 +196,19 @@ const annuleLisible = (a) => a !== null && typeof a === 'object' && texte(a.id) 
 
 const objetSimple = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
-// Carte d'un favori telle qu'envoyée dans swipes.json (sans empreinte), ou null.
+const DESCRIPTION_MAX = 500; // caractères : swipes.json est relu et réécrit à chaque envoi
+const PHOTOS_MAX = 3;
+
+// Carte d'un favori telle qu'envoyée dans swipes.json, ou null. Allégée : ni empreinte, ni données
+// propres à l'appareil (dispo vient d'annonces-etat.json, vu_le du récolteur). Les « j'aime » de
+// l'échauffement ne sont pas des favoris : pas de carte.
 function carteDeFavori(s) {
-  if (s.sens !== 'droite' || !objetSimple(s.carte) || s.carte.id !== s.id) return null;
-  const { emb, ...carte } = s.carte;
+  if (s.sens !== 'droite' || s.echauffement || !objetSimple(s.carte) || s.carte.id !== s.id) return null;
+  const { emb, dispo, vu_le: vuLe, ...carte } = s.carte;
+  if (typeof carte.description === 'string' && carte.description.length > DESCRIPTION_MAX) {
+    carte.description = `${carte.description.slice(0, DESCRIPTION_MAX - 1)}…`;
+  }
+  if (Array.isArray(carte.photos) && carte.photos.length > PHOTOS_MAX) carte.photos = carte.photos.slice(0, PHOTOS_MAX);
   return carte;
 }
 
@@ -409,6 +418,24 @@ export function importerDistants(swipes, objetFinal, annules = []) {
 }
 
 /**
+ * Remise à zéro faite sur un autre appareil (remis_a_zero du dépôt plus récent que la dernière
+ * connue ici) : les swipes d'avant cette date sont retirés de ce téléphone. Renvoie
+ * {gardes, retires} (gardes : même tableau si rien n'est retiré).
+ */
+export function swipesApresRemise(swipes, remisAZero) {
+  const tRemis = ms(remisAZero);
+  if (tRemis === -Infinity) return { gardes: swipes, retires: [] };
+  const retires = swipes.filter((s) => dateSwipe(s) <= tRemis);
+  if (retires.length === 0) return { gardes: swipes, retires };
+  return { gardes: swipes.filter((s) => dateSwipe(s) > tRemis), retires };
+}
+
+/** Faut-il appliquer ici la remise à zéro du dépôt ? (plus récente que la dernière connue ici) */
+export function remiseDistanteNouvelle(remisDistant, remisLocal) {
+  return ms(remisDistant) > ms(remisLocal);
+}
+
+/**
  * profil.json lu dans le dépôt → que faire du profil de ce téléphone :
  * - 'absent' : pas de profil (lisible) dans le dépôt ;
  * - null : le dépôt n'a rien de plus récent que la dernière version connue ici (`modifieLeLocal`) ;
@@ -422,7 +449,9 @@ export function profilDistantAAdopter(distant, modifieLeLocal = null) {
 
 /**
  * Lien qui enregistre la clé sur un autre appareil : la clé va dans le fragment (#cle=…), que le
- * navigateur n'envoie jamais au serveur ; l'appli l'efface de l'adresse dès l'ouverture.
+ * navigateur n'envoie jamais au serveur ni dans le Referer ; l'appli l'efface de la barre d'adresse
+ * dès l'ouverture. L'historique du navigateur et du presse-papiers peut toutefois le garder :
+ * l'écran le dit, et coller la clé reste le chemin principal.
  */
 export function lienAvecCle(adresse, cle) {
   const base = String(adresse).split('#')[0];

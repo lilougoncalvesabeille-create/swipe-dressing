@@ -11,7 +11,7 @@ import { viderCacheEmpreintes } from './empreintes.js';
 import {
   creerClient, versSwipesJson, versProfilJson, envoyerSwipes, envoyerProfil, swipesApresImport,
   recolteEnRetard, finDeCle, problemeSaisieCle, FICHIERS, ErreurCle, ErreurReseau,
-  profilDistantAAdopter, lienAvecCle, cleDuFragment,
+  profilDistantAAdopter, lienAvecCle, cleDuFragment, swipesApresRemise, remiseDistanteNouvelle,
 } from './synchro.js';
 import { completerProfil } from './formulaire.js';
 import { afficherEcran, majBandeauStockage } from './ecrans.js';
@@ -251,12 +251,32 @@ function objetSwipesLocal() {
 // la fusion mettrait les importés en dernier) : ils restent en tête, et « annuler » vise toujours
 // le dernier swipe fait sur ce téléphone.
 function appliquerDistant(objetFinal) {
+  appliquerRemiseDistante(objetFinal?.remis_a_zero);
   const stockes = lireSwipes();
   const avec = swipesApresImport(stockes, objetFinal, lireAnnules());
   if (avec === stockes) return;
   etat.swipes = avec;
   store.ecrire(CLE_SWIPES, avec);
   majBandeau();
+}
+
+// « Tout effacer » fait sur un autre appareil : les swipes d'avant la remise à zéro quittent aussi
+// ce téléphone (favoris, historique), et leurs annonces restent écartées des piles (sd:ecartes).
+function appliquerRemiseDistante(remisDistant) {
+  if (!remiseDistanteNouvelle(remisDistant, lireEtatSynchro().remisAZero ?? null)) return;
+  const { gardes, retires } = swipesApresRemise(lireSwipes(), remisDistant);
+  ecrireEtatSynchro({ remisAZero: remisDistant, echauffementDistant: 0 });
+  if (retires.length === 0) return;
+  const ids = retires.map((s) => s.id).filter((id) => !id.startsWith('demo:'));
+  const ecartes = fusionnerEcartes(store.lire(CLE_ECARTES, null), ids, remisDistant);
+  if (ecartes) store.ecrire(CLE_ECARTES, ecartes);
+  etat.swipes = gardes;
+  store.ecrire(CLE_SWIPES, gardes);
+  store.ecrire(CLE_ANNULES, lireAnnules().filter((a) => Date.parse(a.t) > Date.parse(remisDistant)));
+  etat.pile = ecarterDejaVues(pileBrute);
+  etat.carteDessus = null;
+  majBandeau();
+  redessiner();
 }
 
 async function envoyerUneFois(c) {
@@ -625,7 +645,7 @@ const donneesPour = {
   }),
   questionnaire: () => ({
     profil: etat.profil,
-    retourLien: etat.retourLien,
+    retourLien: lireEtRetirer('retourLien'),
     auValider: (profil) => {
       etat.profil = { ...profil, questionnaireFait: true };
       sauverProfil();
@@ -641,6 +661,13 @@ const donneesPour = {
     auToutEffacer: toutEffacer,
   }),
 };
+
+// Message à montrer une seule fois (le questionnaire suivant ne le réaffiche pas).
+function lireEtRetirer(nom) {
+  const v = etat[nom];
+  etat[nom] = null;
+  return v;
+}
 
 function naviguer(nom, extra = {}) {
   const cible = !etat.profil.questionnaireFait ? 'questionnaire' : nom;
@@ -759,14 +786,17 @@ async function chargerLaPile() {
   installerPile(await chargerPile(URL_PILE, store));
 }
 
-// Lien « autre appareil » (#cle=…) : la clé est retirée de l'adresse tout de suite (ni historique,
-// ni favori, ni copie de l'adresse ne la gardent), puis testée et enregistrée.
+// Lien « autre appareil » (#cle=…) : la clé est retirée de la barre d'adresse tout de suite (copie
+// de l'adresse, favori, partage), puis testée et enregistrée. L'historique du navigateur a pu noter
+// l'adresse complète au chargement : l'écran conseille d'effacer le lien et l'historique.
+// Renvoie true si la clé du lien est enregistrée (la synchronisation est alors lancée).
 async function relierParLien(cle) {
   const resultat = await actionsSynchro.enregistrerCle(cle);
   etat.retourLien = resultat.enregistree
     ? { texte: 'Appareil relié : ton profil et tes favoris arrivent.', erreur: false }
     : { texte: resultat.message ?? 'Le lien n’a pas marché : colle la clé à la main.', erreur: true };
   if (etat.ecran === 'questionnaire') naviguer('questionnaire');
+  return !!resultat.enregistree;
 }
 
 async function demarrer() {
@@ -777,10 +807,7 @@ async function demarrer() {
   brancherNavigation();
   majBandeau();
   naviguer(etat.profil.questionnaireFait ? 'swipe' : 'questionnaire');
-  if (cleDuLien) {
-    await relierParLien(cleDuLien);
-    if (lireCle()) return; // enregistrerCle a lancé la synchronisation (pile comprise)
-  }
+  if (cleDuLien && await relierParLien(cleDuLien)) return; // synchronisation lancée (pile comprise)
   await chargerLaPile();
 }
 

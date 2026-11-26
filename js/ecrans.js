@@ -449,8 +449,9 @@ function boiteRelier(synchro, retourLien) {
   return el('details', { class: 'aide-tailles relier', open: !!retourLien },
     el('summary', {}, 'Déjà utilisé sur un autre appareil ?'),
     el('p', { class: 'aide' },
-      'Sur l’autre appareil : Réglages → Synchronisation → « Copier le lien pour un autre appareil », '
-      + 'puis ouvre ce lien ici. Ou colle ta clé GitHub :'),
+      'Colle ta clé GitHub (celle créée pour Swipe Dressing) : ton profil, tes favoris et ton historique '
+      + 'arrivent ici. Ou, sur l’autre appareil : Réglages → Synchronisation → « Copier le lien pour un '
+      + 'autre appareil », puis ouvre ce lien ici.'),
     el('label', { for: 'relier-cle', class: 'visuellement-cache' }, 'Clé GitHub'),
     champ,
     bouton,
@@ -580,7 +581,8 @@ function sectionSynchro(synchro, etat) {
     montrerRetour(ok
       ? {
         texte: `${partage ? 'Lien partagé' : 'Lien copié'}. Ouvre-le sur ton autre appareil : la clé y sera enregistrée et tout se synchronisera.`,
-        detail: 'Ne le partage avec personne : il donne accès à tes données. Efface-le une fois utilisé.',
+        detail: 'Ne le partage avec personne : il donne accès à tes données. Une fois l’appareil relié, '
+          + 'efface le lien (messages, presse-papiers) et l’historique du navigateur.',
       }
       : { texte: 'Copie impossible sur cet appareil : colle ta clé à la main sur l’autre appareil.', erreur: true });
   }

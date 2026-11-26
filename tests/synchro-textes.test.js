@@ -163,6 +163,8 @@ test('les écrans ne lisent jamais la clé : seulement synchro.finCle()', () => 
   const ecrans = readFileSync('js/ecrans.js', 'utf8');
   // Le champ est un mot de passe sans saisie automatique, vidé dès sa lecture.
   assert.match(ecrans, /type: 'password', id: 'sync-cle', autocomplete: 'off'/);
+  assert.match(ecrans, /type: 'password', id: 'relier-cle', autocomplete: 'off'/);
+  assert.match(ecrans, /const saisie = champ\.value;\s*champ\.value = '';/);
   assert.match(ecrans, /const saisie = champCle\.value;\s*champCle\.value = '';/);
   // La seule partie montrée est la fin rendue par finCle(), précédée de « … ».
   assert.match(ecrans, /`Clé enregistrée : …\$\{fin\}`/);

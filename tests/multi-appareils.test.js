@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   versSwipesJson, fusionnerDistant, importerDistants, profilDistantAAdopter, lienAvecCle, cleDuFragment,
-  depuisSwipesJson,
+  depuisSwipesJson, swipesApresRemise, remiseDistanteNouvelle,
 } from '../js/synchro.js';
 
 const carte = (id, extra = {}) => ({ id, titre: `Annonce ${id}`, prix: 20, photo: 'https://images1.vinted.net/x.webp', ...extra });
@@ -89,4 +89,42 @@ test('lien avec la clé : aller-retour, fragment seulement', () => {
   assert.equal(cleDuFragment('#cle='), null);
   assert.equal(cleDuFragment('#cle=%E0%A4%A'), null);
   assert.equal(cleDuFragment('#cle=a%20b'), null);
+});
+
+test('carte de favori : pas pour l’échauffement ; allégée (dispo, vu_le, description, photos)', () => {
+  const echauffe = { ...favori('vinted:7'), echauffement: true };
+  assert.equal('carte' in versSwipesJson([echauffe]).swipes[0], false);
+  const lourde = {
+    ...favori('vinted:8'),
+    carte: carte('vinted:8', {
+      dispo: false, vu_le: '2026-11-26T08:00:00Z', description: 'x'.repeat(800),
+      photos: ['a', 'b', 'c', 'd', 'e'],
+    }),
+  };
+  const c = versSwipesJson([lourde]).swipes[0].carte;
+  assert.equal('dispo' in c, false);
+  assert.equal('vu_le' in c, false);
+  assert.equal(c.description.length, 500);
+  assert.ok(c.description.endsWith('…'));
+  assert.deepEqual(c.photos, ['a', 'b', 'c']);
+  assert.equal(lourde.carte.photos.length, 5); // la carte d'origine n'est pas modifiée
+});
+
+test('remise à zéro venue d’un autre appareil', () => {
+  const swipes = [
+    favori('vinted:1', '2026-11-26T09:00:00Z'),
+    { ...refus('vinted:2', '2026-11-26T09:00:00Z'), sens: 'droite', repeche_le: '2026-11-26T13:00:00Z' },
+    favori('vinted:3', '2026-11-26T14:00:00Z'),
+  ];
+  const { gardes, retires } = swipesApresRemise(swipes, '2026-11-26T12:00:00Z');
+  assert.deepEqual(retires.map((s) => s.id), ['vinted:1']);
+  assert.deepEqual(gardes.map((s) => s.id), ['vinted:2', 'vinted:3']);
+  const rien = swipesApresRemise(swipes, '2026-11-26T08:00:00Z');
+  assert.equal(rien.gardes, swipes);
+  assert.equal(swipesApresRemise(swipes, null).gardes, swipes);
+
+  assert.equal(remiseDistanteNouvelle('2026-11-26T12:00:00Z', null), true);
+  assert.equal(remiseDistanteNouvelle('2026-11-26T12:00:00Z', '2026-11-26T12:00:00Z'), false);
+  assert.equal(remiseDistanteNouvelle(null, '2026-11-26T12:00:00Z'), false);
+  assert.equal(remiseDistanteNouvelle(null, null), false);
 });
