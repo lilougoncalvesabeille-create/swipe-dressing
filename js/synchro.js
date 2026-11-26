@@ -185,9 +185,11 @@ export function creerClient({ cle, fetch: f = globalThis.fetch?.bind(globalThis)
 }
 
 // --- Format de swipes.json ---
-// { "version": 1, "swipes": [{id, sens, t, raison?, repeche_le?, carte?}], "annules": [{id, t}],
-//   "remis_a_zero": ISO|null, "echauffement_faits": int }
-// `carte` (sans empreinte) accompagne les favoris : l'écran Favoris d'un autre appareil les affiche.
+// { "version": 1, "swipes": [{id, sens, t, raison?, repeche_le?, echauffement?, carte?}],
+//   "annules": [{id, t}], "remis_a_zero": ISO|null, "echauffement_faits": int }
+// `carte` (sans empreinte) accompagne les favoris et les refus récents : les écrans Favoris et
+// Historique de chaque appareil sont les mêmes. `echauffement` : swipe de l'échauffement (ni favori
+// ni historique, compte dans « Échauffement X/15 » sur tous les appareils).
 
 const estDemo = (id) => id.startsWith('demo:');
 const texte = (v) => typeof v === 'string' && v.length > 0;
@@ -196,19 +198,26 @@ const annuleLisible = (a) => a !== null && typeof a === 'object' && texte(a.id) 
 
 const objetSimple = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
-const DESCRIPTION_MAX = 500; // caractères : swipes.json est relu et réécrit à chaque envoi
-const PHOTOS_MAX = 3;
+// swipes.json est relu et réécrit à chaque envoi : les cartes y sont allégées.
+const LIMITES_CARTE = {
+  droite: { description: 500, photos: 3 }, // favoris : toujours avec leur carte
+  gauche: { description: 200, photos: 1 }, // refus : seulement les plus récents (REFUS_AVEC_CARTE)
+};
+// Comme sur le téléphone (GARDER_CARTES de paquet.js) : au-delà, un refus n'a plus de carte.
+export const REFUS_AVEC_CARTE = 300;
 
-// Carte d'un favori telle qu'envoyée dans swipes.json, ou null. Allégée : ni empreinte, ni données
-// propres à l'appareil (dispo vient d'annonces-etat.json, vu_le du récolteur). Les « j'aime » de
-// l'échauffement ne sont pas des favoris : pas de carte.
-function carteDeFavori(s) {
-  if (s.sens !== 'droite' || s.echauffement || !objetSimple(s.carte) || s.carte.id !== s.id) return null;
+// Carte d'un swipe telle qu'envoyée dans swipes.json, ou null. Ni empreinte, ni données propres
+// à l'appareil (dispo vient d'annonces-etat.json, vu_le du récolteur). Les swipes d'échauffement
+// ne s'affichent nulle part : pas de carte.
+function carteAEnvoyer(s) {
+  if (s.echauffement || !objetSimple(s.carte) || s.carte.id !== s.id) return null;
+  const limites = LIMITES_CARTE[s.sens];
+  if (!limites) return null;
   const { emb, dispo, vu_le: vuLe, ...carte } = s.carte;
-  if (typeof carte.description === 'string' && carte.description.length > DESCRIPTION_MAX) {
-    carte.description = `${carte.description.slice(0, DESCRIPTION_MAX - 1)}…`;
+  if (typeof carte.description === 'string' && carte.description.length > limites.description) {
+    carte.description = `${carte.description.slice(0, limites.description - 1)}…`;
   }
-  if (Array.isArray(carte.photos) && carte.photos.length > PHOTOS_MAX) carte.photos = carte.photos.slice(0, PHOTOS_MAX);
+  if (Array.isArray(carte.photos) && carte.photos.length > limites.photos) carte.photos = carte.photos.slice(0, limites.photos);
   return carte;
 }
 
@@ -216,16 +225,37 @@ function swipeCompact(s) {
   const r = { id: s.id, sens: s.sens, t: s.t };
   if (texte(s.raison)) r.raison = s.raison;
   if (texte(s.repeche_le)) r.repeche_le = s.repeche_le;
-  const carte = carteDeFavori(s);
+  if (s.echauffement === true) r.echauffement = true;
+  const carte = carteAEnvoyer(s);
   if (carte) r.carte = carte;
   return r;
 }
 
-// Le swipe gagnant d'une fusion garde la carte de l'autre côté s'il n'en a pas (favori envoyé
-// avant que les cartes ne voyagent, ou venu d'un appareil qui ne l'avait pas).
+// Le swipe gagnant d'une fusion garde la carte (et la marque d'échauffement) de l'autre côté
+// s'il ne les a pas : swipe envoyé avant qu'elles ne voyagent, ou venu d'un appareil qui ne les
+// avait plus. Les clés restent dans l'ordre de swipeCompact (pas d'écriture en boucle).
 function avecCarte(gagnant, autre) {
-  if (gagnant.carte || !autre?.carte || gagnant.sens !== 'droite') return gagnant;
-  return { ...gagnant, carte: autre.carte };
+  if (!autre) return gagnant;
+  const echauffement = gagnant.echauffement === true || autre.echauffement === true;
+  const carte = echauffement ? null : (gagnant.carte ?? autre.carte ?? null);
+  if (echauffement === (gagnant.echauffement === true) && carte === (gagnant.carte ?? null)) return gagnant;
+  return swipeCompact({ ...gagnant, echauffement, carte });
+}
+
+// Les refus plus anciens que les REFUS_AVEC_CARTE plus récents perdent leur carte (swipes triés).
+function bornerCartesRefus(swipes) {
+  let refus = 0;
+  const resultat = [];
+  for (let i = swipes.length - 1; i >= 0; i--) {
+    const s = swipes[i];
+    if (s.sens === 'gauche' && s.carte && ++refus > REFUS_AVEC_CARTE) {
+      const { carte, ...sansCarte } = s;
+      resultat.push(sansCarte);
+    } else {
+      resultat.push(s);
+    }
+  }
+  return resultat.reverse();
 }
 
 /**
@@ -301,14 +331,14 @@ export function fusionnerDistant(local, distant) {
     if (!deja || dateSwipe(s) > dateSwipe(deja)) parId.set(s.id, avecCarte(s, deja));
     else parId.set(s.id, avecCarte(deja, s));
   }
-  const swipes = [...parId.values()]
+  const swipes = bornerCartesRefus([...parId.values()]
     .filter((s) => {
       const date = dateSwipe(s);
       if (date <= tRemis) return false;
       const annule = annules.get(s.id);
       return !annule || ms(annule.t) < date;
     })
-    .sort((a, b) => ms(a.t) - ms(b.t));
+    .sort((a, b) => ms(a.t) - ms(b.t) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)));
 
   const aL = activite(L);
   const aD = activite(D);
@@ -353,12 +383,11 @@ export async function envoyerSwipes(client, objetLocal, { essais = 3 } = {}) {
 }
 
 /**
- * Objet profil.json : { version: 1, profil, modifie_le }. Les mensurations (taille, poids, pied)
- * ne servent qu'à l'aide aux tailles du téléphone : elles ne sont jamais envoyées.
+ * Objet profil.json : { version: 1, profil, modifie_le }. Le profil entier voyage, mensurations
+ * comprises (taille, poids, pied : partagées entre les appareils ; le récolteur les ignore).
  */
 export function versProfilJson(profil, modifieLe = new Date().toISOString()) {
-  const { mensurations, ...envoye } = profil ?? {};
-  return { version: 1, profil: envoye, modifie_le: modifieLe };
+  return { version: 1, profil, modifie_le: modifieLe };
 }
 
 /**
@@ -404,7 +433,8 @@ export function importerDistants(swipes, objetFinal, annules = []) {
     if (dateSwipe(d) > dateSwipe(s) && d.sens === 'droite' && s.sens !== 'droite') {
       r = { ...r, sens: 'droite', repeche: true, repeche_le: d.repeche_le ?? d.t };
     }
-    if (!r.carte && d.carte && r.sens === 'droite') r = { ...r, carte: d.carte };
+    if (d.echauffement === true && r.echauffement !== true) r = { ...r, echauffement: true };
+    if (!r.carte && d.carte && !r.echauffement) r = { ...r, carte: d.carte };
     if (r !== s) change = true;
     return r;
   });

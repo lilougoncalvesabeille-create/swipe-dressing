@@ -150,7 +150,7 @@ function blocTaille(titreBloc, champs, nomMode) {
 }
 
 // Aide « Je ne connais pas mes tailles » : taille, poids et pied → champs de tailles remplis
-// (mode large partout). Ses valeurs restent sur le téléphone (voir versProfilJson).
+// (mode large partout). Ses valeurs voyagent avec le profil (profil.json, dépôt privé).
 function aideTailles() {
   const retour = el('p', { class: 'aide aide-estimation', role: 'status', 'aria-live': 'polite' });
   const estimer = (e) => {
@@ -184,7 +184,7 @@ function aideTailles() {
     el('summary', {}, 'Je ne connais pas mes tailles'),
     el('p', { class: 'aide' },
       'Donne ta taille et ton poids : l’appli estime tes tailles et passe en mode large pour compenser. '
-      + 'Ces mesures restent sur ce téléphone.'),
+      + 'Ces mesures sont gardées avec ton profil, sur tous tes appareils.'),
     segments('mens-gabarit', 'Tableau de tailles', GABARITS),
     el('div', { class: 'grille-champs' },
       champ('Ta taille (cm)', nombre('mens-taille', BORNES.tailleCm, { placeholder: 'ex. 175' })),

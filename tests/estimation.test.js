@@ -88,11 +88,8 @@ test('gabaritDe : choisi, sinon d’après le rayon', () => {
   assert.equal(gabaritDe(null), 'homme');
 });
 
-test('versProfilJson n’envoie jamais les mensurations', () => {
+test('versProfilJson envoie tout le profil, mensurations comprises (partagées entre appareils)', () => {
   const profil = { ...profilParDefaut(), mensurations: { gabarit: 'homme', tailleCm: 180, poidsKg: 80, piedCm: 27 } };
   const json = versProfilJson(profil, '2026-11-26T08:00:00Z');
-  assert.equal('mensurations' in json.profil, false);
-  assert.equal(JSON.stringify(json).includes('poidsKg'), false);
-  assert.deepEqual(json.profil.tailles, profil.tailles);
-  assert.equal(profil.mensurations.poidsKg, 80); // l'original n'est pas modifié
+  assert.deepEqual(json, { version: 1, profil, modifie_le: '2026-11-26T08:00:00Z' });
 });

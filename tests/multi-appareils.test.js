@@ -2,20 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   versSwipesJson, fusionnerDistant, importerDistants, profilDistantAAdopter, lienAvecCle, cleDuFragment,
-  depuisSwipesJson, swipesApresRemise, remiseDistanteNouvelle,
+  depuisSwipesJson, swipesApresRemise, remiseDistanteNouvelle, REFUS_AVEC_CARTE,
 } from '../js/synchro.js';
 
 const carte = (id, extra = {}) => ({ id, titre: `Annonce ${id}`, prix: 20, photo: 'https://images1.vinted.net/x.webp', ...extra });
 const favori = (id, t = '2026-11-26T10:00:00Z') => ({ id, sens: 'droite', t, raison: null, carte: carte(id), emb: 'QUJD' });
 const refus = (id, t = '2026-11-26T10:00:00Z') => ({ id, sens: 'gauche', t, raison: null, carte: carte(id), emb: 'QUJD' });
 
-test('swipes.json : les favoris voyagent avec leur carte, sans empreinte ; les refus sans carte', () => {
+test('swipes.json : favoris et refus voyagent avec leur carte, sans empreinte', () => {
   const objet = versSwipesJson([favori('vinted:1'), refus('vinted:2')]);
   const [f, r] = objet.swipes;
   assert.deepEqual(f.carte, carte('vinted:1'));
   assert.equal('emb' in f, false);
   assert.equal(JSON.stringify(objet).includes('QUJD'), false);
-  assert.equal('carte' in r, false);
+  assert.deepEqual(r.carte, carte('vinted:2'));
 });
 
 test('swipes.json : carte d’une autre annonce ou carte avec empreinte', () => {
@@ -45,7 +45,7 @@ test('import : favoris d’un autre appareil avec carte ; carte manquante compl�
   const parId = Object.fromEntries(res.map((s) => [s.id, s]));
   assert.deepEqual(parId['vinted:1'].carte, carte('vinted:1'));
   assert.equal(parId['vinted:1'].distant, true);
-  assert.equal(parId['vinted:2'].carte, undefined);
+  assert.deepEqual(parId['vinted:2'].carte, carte('vinted:2'));
   assert.deepEqual(parId['vinted:3'].carte, carte('vinted:3'));
   assert.equal(res.at(-1).id, 'vinted:3'); // les swipes d'ici restent en dernier (« annuler »)
 
@@ -127,4 +127,38 @@ test('remise à zéro venue d’un autre appareil', () => {
   assert.equal(remiseDistanteNouvelle('2026-11-26T12:00:00Z', '2026-11-26T12:00:00Z'), false);
   assert.equal(remiseDistanteNouvelle(null, '2026-11-26T12:00:00Z'), false);
   assert.equal(remiseDistanteNouvelle(null, null), false);
+});
+
+test('tout est partagé : échauffement, historique récent, cartes des vieux refus bornées', () => {
+  // L'échauffement voyage (marque), sans carte ; il reste caché des Favoris sur l'autre appareil.
+  const echauffe = { ...favori('vinted:7'), echauffement: true };
+  const objet = versSwipesJson([echauffe]);
+  assert.equal(objet.swipes[0].echauffement, true);
+  const importe = importerDistants([], objet)[0];
+  assert.equal(importe.echauffement, true);
+  assert.equal(importe.carte, undefined);
+
+  // Marque d'échauffement connue d'un seul côté : gardée par la fusion et reprise à l'import.
+  const sansMarque = { version: 1, swipes: [{ id: 'vinted:7', sens: 'droite', t: '2026-11-26T10:00:00Z' }], annules: [], remis_a_zero: null, echauffement_faits: 0 };
+  assert.equal(fusionnerDistant(sansMarque, objet).swipes[0].echauffement, true);
+  assert.equal(fusionnerDistant(objet, sansMarque).swipes[0].echauffement, true);
+  const ici = [{ id: 'vinted:7', sens: 'droite', t: '2026-11-26T10:00:00Z', distant: true, carte: carte('vinted:7') }];
+  assert.equal(importerDistants(ici, objet)[0].echauffement, true);
+
+  // Carte de refus allégée (1 photo, description courte).
+  const refusLourd = { ...refus('vinted:8'), carte: carte('vinted:8', { description: 'y'.repeat(400), photos: ['a', 'b'] }) };
+  const c = versSwipesJson([refusLourd]).swipes[0].carte;
+  assert.equal(c.description.length, 200);
+  assert.deepEqual(c.photos, ['a']);
+
+  // Au-delà de REFUS_AVEC_CARTE refus, les plus vieux perdent leur carte dans le dépôt.
+  const beaucoup = Array.from({ length: REFUS_AVEC_CARTE + 5 }, (_, i) =>
+    refus(`vinted:${1000 + i}`, new Date(Date.UTC(2026, 10, 1) + i * 60_000).toISOString()));
+  const fus = fusionnerDistant(versSwipesJson(beaucoup), null).swipes;
+  assert.equal(fus.filter((s) => s.carte).length, REFUS_AVEC_CARTE);
+  assert.equal(fus[0].carte, undefined);
+  assert.ok(fus.at(-1).carte);
+  // Stable : refusionner ne change rien (pas d'écriture en boucle).
+  const deux = fusionnerDistant(fusionnerDistant(versSwipesJson(beaucoup), null), null);
+  assert.deepEqual(deux, fusionnerDistant(versSwipesJson(beaucoup), null));
 });

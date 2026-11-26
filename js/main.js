@@ -365,7 +365,8 @@ async function lireAnnexes(c) {
 }
 
 // profil.json plus récent que celui de ce téléphone (modifié sur un autre appareil, ou ce téléphone
-// vient d'être relié) : il remplace le profil d'ici, sauf les mensurations qui ne voyagent pas.
+// vient d'être relié) : il remplace le profil d'ici, mensurations comprises (un profil envoyé par
+// une ancienne version, sans mensurations, garde celles d'ici).
 // Dépôt sans profil : celui d'ici part (s'il a été rempli).
 async function adopterProfilDistant(c) {
   const gen = generation;
@@ -383,7 +384,8 @@ async function adopterProfilDistant(c) {
   }
   if (!choix) return;
   const questionnaireAvant = etat.profil.questionnaireFait;
-  etat.profil = completerProfil({ ...choix.profil, mensurations: etat.profil.mensurations });
+  const distant = choix.profil;
+  etat.profil = completerProfil('mensurations' in distant ? distant : { ...distant, mensurations: etat.profil.mensurations });
   store.ecrire(CLE_PROFIL, etat.profil);
   ecrireEtatSynchro({ profilModifieLe: choix.modifieLe });
   majBandeau();

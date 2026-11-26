@@ -195,7 +195,7 @@ test('tester : ok, clé refusée, dépôt inaccessible, hors connexion', async (
 
 // --- Format de swipes.json ---
 
-test('versSwipesJson : format compact, sans carte ni empreinte, sans la démo', () => {
+test('versSwipesJson : format compact, sans empreinte, sans la démo (cartes mal formées écartées)', () => {
   const swipes = [
     { id: 'demo:1', sens: 'droite', t: '2026-01-01T00:00:00.000Z', echauffement: true, carte: {}, emb: 'AA==' },
     { id: 'vinted:1', sens: 'gauche', raison: 'prix', echauffement: true, t: '2026-01-02T00:00:00.000Z', carte: { titre: 'x' }, emb: 'AA==' },
@@ -210,7 +210,7 @@ test('versSwipesJson : format compact, sans carte ni empreinte, sans la démo', 
   assert.deepEqual(o, {
     version: 1,
     swipes: [
-      { id: 'vinted:1', sens: 'gauche', t: '2026-01-02T00:00:00.000Z', raison: 'prix' },
+      { id: 'vinted:1', sens: 'gauche', t: '2026-01-02T00:00:00.000Z', raison: 'prix', echauffement: true },
       { id: 'vinted:2', sens: 'gauche', t: '2026-01-03T00:00:00.000Z' },
       { id: 'vinted:3', sens: 'droite', t: '2026-01-04T00:00:00.000Z', repeche_le: '2026-01-05T00:00:00.000Z' },
     ],

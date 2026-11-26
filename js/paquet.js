@@ -28,7 +28,7 @@ export function profilParDefaut() {
       bas: { lettre: null, eu: null, w: null, mode: 'large' },
       pointure: { eu: null, mode: 'large' },
     },
-    // Aide « Je ne connais pas mes tailles » : gardée sur le téléphone, jamais envoyée au PC.
+    // Aide « Je ne connais pas mes tailles » : partagée entre les appareils (ignorée par le PC).
     mensurations: { gabarit: null, tailleCm: null, poidsKg: null, piedCm: null },
     pays: 'FR',
     region: '',
