@@ -322,9 +322,13 @@ export async function envoyerSwipes(client, objetLocal, { essais = 3 } = {}) {
   throw derniere ?? new ErreurConflit(`${FICHIERS.swipes} : aucun essai`);
 }
 
-/** Objet profil.json : { version: 1, profil, modifie_le }. */
+/**
+ * Objet profil.json : { version: 1, profil, modifie_le }. Les mensurations (taille, poids, pied)
+ * ne servent qu'à l'aide aux tailles du téléphone : elles ne sont jamais envoyées.
+ */
 export function versProfilJson(profil, modifieLe = new Date().toISOString()) {
-  return { version: 1, profil, modifie_le: modifieLe };
+  const { mensurations, ...envoye } = profil ?? {};
+  return { version: 1, profil: envoye, modifie_le: modifieLe };
 }
 
 /**

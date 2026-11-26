@@ -60,7 +60,63 @@ export const BORNES = {
   pointure: { min: 16, max: 55, pas: 0.5 },
   budget: { min: 1, max: 10000, pas: 1 },
   exploration: { min: 0, max: 50, pas: 1 },
+  tailleCm: { min: 120, max: 220, pas: 1 },
+  poidsKg: { min: 30, max: 250, pas: 1 },
+  piedCm: { min: 15, max: 35, pas: 0.5 },
 };
+
+export const GABARITS = [
+  { valeur: 'homme', libelle: 'Homme' },
+  { valeur: 'femme', libelle: 'Femme' },
+];
+
+// --- Estimation des tailles (aide « Je ne connais pas mes tailles ») ---
+// Repères moyens des guides de tailles français : une estimation, pas une mesure.
+// Le poids donne la lettre ; une grande taille la monte d'un cran (longueur des manches et des jambes).
+const SEUILS_POIDS = {
+  // poids maximum (kg) de chaque lettre, de XXS à XXL ; au-delà : XXXL
+  homme: [50, 56, 65, 77, 89, 101, 115],
+  femme: [45, 52, 59, 67, 76, 86, 97],
+};
+const GRANDE_TAILLE_CM = { homme: 190, femme: 178 };
+// Équivalences par lettre (XXS → XXXL).
+const EU_HAUT = { homme: [42, 44, 46, 48, 50, 52, 54, 56], femme: [32, 34, 36, 38, 40, 42, 44, 46] };
+const EU_BAS = { homme: [34, 36, 38, 40, 42, 44, 46, 48], femme: [32, 34, 36, 38, 40, 42, 44, 46] };
+const W_BAS = { homme: [27, 28, 30, 32, 34, 36, 38, 40], femme: [24, 25, 27, 29, 31, 33, 35, 37] };
+
+/**
+ * Tailles probables à partir de la taille (cm), du poids (kg) et, si connue, de la longueur
+ * du pied (cm). Renvoie { haut, bas, pointure } (chaque partie null si impossible à estimer).
+ * Sans pied mesuré, la longueur est déduite de la taille (environ 15 %), donc moins sûre.
+ */
+export function estimerTailles({ gabarit, tailleCm, poidsKg, piedCm } = {}) {
+  const g = gabarit === 'femme' ? 'femme' : 'homme';
+  const taille = lireNombre(tailleCm, BORNES.tailleCm);
+  const poids = lireNombre(poidsKg, BORNES.poidsKg);
+  const pied = lireNombre(piedCm, { min: BORNES.piedCm.min, max: BORNES.piedCm.max });
+
+  let haut = null;
+  let bas = null;
+  if (taille !== null && poids !== null) {
+    let rang = SEUILS_POIDS[g].findIndex((max) => poids <= max);
+    if (rang === -1) rang = LETTRES_TAILLE.length - 1;
+    if (taille >= GRANDE_TAILLE_CM[g]) rang = Math.min(LETTRES_TAILLE.length - 1, rang + 1);
+    const lettre = LETTRES_TAILLE[rang];
+    haut = { lettre, eu: EU_HAUT[g][rang] };
+    bas = { lettre, eu: EU_BAS[g][rang], w: W_BAS[g][rang] };
+  }
+
+  let pointure = null;
+  const longueur = pied ?? (taille !== null ? taille * 0.15 : null);
+  if (longueur !== null) {
+    // Pointure EU (point de Paris = 2/3 cm) d'une chaussure environ 1,5 cm plus longue que le pied.
+    const eu = Math.round((longueur + 1.5) * 1.5 * 2) / 2;
+    if (eu >= BORNES.pointure.min && eu <= BORNES.pointure.max) {
+      pointure = { eu, mesuree: pied !== null };
+    }
+  }
+  return { haut, bas, pointure };
+}
 
 const EPSILON = 1e-9;
 
@@ -77,6 +133,16 @@ export function lireNombre(texte, { min = -Infinity, max = Infinity, pas = null 
     if (reste > EPSILON) return null;
   }
   return n;
+}
+
+// Phrase affichée après une estimation ; null si rien n'a pu être estimé.
+export function resumeEstimation({ haut, bas, pointure } = {}) {
+  const parties = [];
+  if (haut) parties.push(`haut ${haut.lettre} (EU ${haut.eu})`);
+  if (bas) parties.push(`bas ${bas.lettre} (EU ${bas.eu}, W${bas.w})`);
+  if (pointure) parties.push(`pointure ${String(pointure.eu).replace('.', ',')}${pointure.mesuree ? '' : ' (d’après ta taille)'}`);
+  if (parties.length === 0) return null;
+  return `Estimation : ${parties.join(', ')}. Mode large activé pour compenser. Vérifie et ajuste si besoin, puis enregistre.`;
 }
 
 // « Nike, adidas ; Carhartt » → ['Nike', 'adidas', 'Carhartt'], sans doublon (casse ignorée).
@@ -111,6 +177,25 @@ function budgetsValides(parCategorie) {
   return propres;
 }
 
+// Mensurations lues du stockage : valeurs dans leurs bornes, sinon null.
+function mensurationsValides(m) {
+  const lu = estObjet(m) ? m : {};
+  const nombreOuNull = (v, bornes) => (typeof v === 'number' ? lireNombre(v, bornes) : null);
+  return {
+    gabarit: parmi(lu.gabarit, GABARITS) ? lu.gabarit : null,
+    tailleCm: nombreOuNull(lu.tailleCm, BORNES.tailleCm),
+    poidsKg: nombreOuNull(lu.poidsKg, BORNES.poidsKg),
+    piedCm: nombreOuNull(lu.piedCm, BORNES.piedCm),
+  };
+}
+
+// Gabarit de l'aide aux tailles : celui choisi, sinon celui du rayon (homme par défaut).
+export function gabaritDe(profil) {
+  const m = profil?.mensurations;
+  if (m && parmi(m.gabarit, GABARITS)) return m.gabarit;
+  return profil?.rayon === 'femme' ? 'femme' : 'homme';
+}
+
 // Profil lu dans le stockage → profil complet (champs manquants remplis par les défauts).
 export function completerProfil(lu) {
   const d = profilParDefaut();
@@ -125,6 +210,7 @@ export function completerProfil(lu) {
       bas: { ...d.tailles.bas, ...(estObjet(t.bas) ? t.bas : {}) },
       pointure: { ...d.tailles.pointure, ...(estObjet(t.pointure) ? t.pointure : {}) },
     },
+    mensurations: mensurationsValides(lu.mensurations),
     budget: {
       max: typeof b.max === 'number' ? b.max : d.budget.max,
       parCategorie: budgetsValides(b.parCategorie),
@@ -155,6 +241,10 @@ export function valeursDepuisProfil(profil) {
     'bas-mode': bas.mode,
     'pointure-eu': texteDe(pointure.eu),
     'pointure-mode': pointure.mode,
+    'mens-gabarit': gabaritDe(p),
+    'mens-taille': texteDe(p.mensurations.tailleCm),
+    'mens-poids': texteDe(p.mensurations.poidsKg),
+    'mens-pied': texteDe(p.mensurations.piedCm),
     pays: p.pays,
     region: p.region,
     budget: texteDe(p.budget.max),
@@ -198,6 +288,14 @@ export function lireFormulaire(valeurs, base = profilParDefaut()) {
   mode('bas-mode', 'bas');
   if (a('pointure-eu')) p.tailles.pointure.eu = lireNombre(v['pointure-eu'], BORNES.pointure);
   mode('pointure-mode', 'pointure');
+  // Gabarit retenu seulement s'il diffère de celui du rayon (null = suivre le rayon).
+  if (a('mens-gabarit') && parmi(v['mens-gabarit'], GABARITS)) {
+    const parRayon = gabaritDe({ rayon: p.rayon });
+    p.mensurations.gabarit = v['mens-gabarit'] === parRayon ? null : v['mens-gabarit'];
+  }
+  if (a('mens-taille')) p.mensurations.tailleCm = lireNombre(v['mens-taille'], BORNES.tailleCm);
+  if (a('mens-poids')) p.mensurations.poidsKg = lireNombre(v['mens-poids'], BORNES.poidsKg);
+  if (a('mens-pied')) p.mensurations.piedCm = lireNombre(v['mens-pied'], BORNES.piedCm);
 
   if (a('pays') && parmi(v.pays, PAYS)) p.pays = v.pays;
   if (a('region')) p.region = String(v.region ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);

@@ -226,6 +226,24 @@ input:user-invalid, select:user-invalid { border-color: var(--danger); }
 .budgets-categories .grille-champs { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 .budgets-categories input { background: var(--surface); }
 
+/* Aide « Je ne connais pas mes tailles », repliée par défaut */
+.aide-tailles {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+.aide-tailles > summary {
+  min-height: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+.aide-tailles .grille-champs { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+.aide-tailles input { background: var(--surface); }
+.aide-tailles .aide-estimation:empty { display: none; }
+
 /* Sélecteur segmenté (rayon, stricte / large) */
 .segments {
   display: grid;

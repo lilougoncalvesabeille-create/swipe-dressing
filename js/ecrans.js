@@ -3,7 +3,7 @@
 
 import {
   LETTRES_TAILLE, RAYONS, MODES, LIBELLES_ETATS, CATEGORIES_LISTE, PAYS, BORNES,
-  valeursDepuisProfil, lireFormulaire, champBudget,
+  valeursDepuisProfil, lireFormulaire, champBudget, GABARITS, estimerTailles, resumeEstimation,
 } from './formulaire.js';
 import { ETATS } from './paquet.js';
 import { texteEtatSynchro, retourCle, problemeSaisieCle, ETAPES_CLE } from './synchro.js';
@@ -149,6 +149,53 @@ function blocTaille(titreBloc, champs, nomMode) {
   );
 }
 
+// Aide « Je ne connais pas mes tailles » : taille, poids et pied → champs de tailles remplis
+// (mode large partout). Ses valeurs restent sur le téléphone (voir versProfilJson).
+function aideTailles() {
+  const retour = el('p', { class: 'aide aide-estimation', role: 'status', 'aria-live': 'polite' });
+  const estimer = (e) => {
+    const form = e.currentTarget.form;
+    const valeur = (nom) => form.elements.namedItem(nom)?.value ?? '';
+    const estimation = estimerTailles({
+      gabarit: valeur('mens-gabarit'),
+      tailleCm: valeur('mens-taille'),
+      poidsKg: valeur('mens-poids'),
+      piedCm: valeur('mens-pied'),
+    });
+    const resume = resumeEstimation(estimation);
+    if (!resume) {
+      retour.textContent = 'Entre au moins ta taille (en cm) et ton poids (en kg).';
+      return;
+    }
+    const poser = (nom, v) => {
+      const controle = form.elements.namedItem(nom);
+      if (controle) controle.value = String(v);
+    };
+    const { haut, bas, pointure } = estimation;
+    if (haut) { poser('haut-lettre', haut.lettre); poser('haut-eu', haut.eu); poser('haut-mode', 'large'); }
+    if (bas) {
+      poser('bas-lettre', bas.lettre); poser('bas-eu', bas.eu); poser('bas-w', bas.w); poser('bas-mode', 'large');
+    }
+    if (pointure) { poser('pointure-eu', pointure.eu); poser('pointure-mode', 'large'); }
+    form.dispatchEvent(new Event('input', { bubbles: true }));
+    retour.textContent = resume;
+  };
+  return el('details', { class: 'aide-tailles' },
+    el('summary', {}, 'Je ne connais pas mes tailles'),
+    el('p', { class: 'aide' },
+      'Donne ta taille et ton poids : l’appli estime tes tailles et passe en mode large pour compenser. '
+      + 'Ces mesures restent sur ce téléphone.'),
+    segments('mens-gabarit', 'Tableau de tailles', GABARITS),
+    el('div', { class: 'grille-champs' },
+      champ('Ta taille (cm)', nombre('mens-taille', BORNES.tailleCm, { placeholder: 'ex. 175' })),
+      champ('Poids (kg)', nombre('mens-poids', BORNES.poidsKg, { placeholder: 'ex. 70' })),
+      champ('Pied (cm)', nombre('mens-pied', BORNES.piedCm, { placeholder: 'ex. 26,5', decimal: true }),
+        'Facultatif : talon contre un mur, mesure jusqu’au bout du plus long orteil.')),
+    el('button', { type: 'button', class: 'bouton bouton-secondaire', onclick: estimer }, 'Estimer mes tailles'),
+    retour,
+  );
+}
+
 // Budgets par catégorie (réglages) : repliés par défaut, vides = budget global.
 function budgetsParCategorie() {
   return el('details', { class: 'budgets-categories' },
@@ -170,8 +217,9 @@ function etapes({ parCategorie = false } = {}) {
     },
     {
       titre: 'Tes tailles',
-      intro: 'Remplis ce que tu connais. Une annonce dont la taille est dans un système laissé vide est écartée.',
+      intro: 'Remplis ce que tu connais, ou laisse l’appli les estimer. Une annonce dont la taille est dans un système laissé vide est écartée.',
       champs: [
+        aideTailles(),
         blocTaille('Haut', [
           champ('Lettre', lettres('haut-lettre')),
           champ('EU', nombre('haut-eu', BORNES.eu, { placeholder: 'ex. 40' })),
@@ -318,6 +366,13 @@ export function formulaireProfil(conteneur, profil, auValider, options = {}) {
 
   // Un message « enregistré » disparaît dès qu'on modifie à nouveau un champ.
   form.addEventListener('input', () => { statut.textContent = ''; });
+
+  // Le tableau de tailles de l'aide suit le rayon choisi (homme ou femme).
+  form.addEventListener('change', (e) => {
+    if (e.target.name !== 'rayon' || !['homme', 'femme'].includes(e.target.value)) return;
+    const gabarit = form.elements.namedItem('mens-gabarit');
+    if (gabarit) gabarit.value = e.target.value;
+  });
 
   precedent.addEventListener('click', () => {
     if (courante > 0) montrerEtape(courante - 1);
