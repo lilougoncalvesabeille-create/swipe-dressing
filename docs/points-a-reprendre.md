@@ -23,7 +23,6 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
 - Le contraste du texte d'exemple dans les champs est d'environ 4:1.
 
 ## Fiche détail
-- Au retour d'une fiche, le focus ne revient pas sur la vignette ouverte.
 - Le bouton « Suivant » du navigateur laisse une entrée morte dans l'historique.
 
 ## Deux copies ouvertes en même temps (appli installée + onglet Chrome)

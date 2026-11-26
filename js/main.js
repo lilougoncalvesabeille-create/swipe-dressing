@@ -546,9 +546,12 @@ function ouvrirFiche(id, origine) {
 }
 
 function revenirDeFiche() {
-  const { origine = 'favoris', defilement = 0 } = etat.fiche ?? {};
+  const { id, origine = 'favoris', defilement = 0 } = etat.fiche ?? {};
   naviguer(origine);
   window.scrollTo(0, defilement);
+  // Le focus revient sur la vignette ouverte (clavier, lecteur d'écran), sans faire défiler.
+  const vignette = [...document.querySelectorAll('#ecran .vignette')].find((v) => v.dataset.id === id);
+  vignette?.querySelector('.vignette-ouvrir')?.focus({ preventScroll: true });
 }
 
 // Bouton « ← Retour » : passe par l'historique si la fiche y a son entrée (popstate s'en charge).
