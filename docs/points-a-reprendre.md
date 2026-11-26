@@ -15,7 +15,6 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
 
 ## Swipe
 - Pendant l'animation de sortie, un appui sur un bouton en plein glissé provoque un petit défaut visuel.
-- Au clavier, le focus se perd après un swipe.
 
 ## Fiche détail
 - Le bouton « Suivant » du navigateur laisse une entrée morte dans l'historique.

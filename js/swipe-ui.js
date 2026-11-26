@@ -292,10 +292,21 @@ export function monterPile(conteneur, options) {
     if (sens === 'droite') annoncer(entree.echauffement ? 'Noté.' : 'Ajouté aux favoris.');
     else annoncer('Carte écartée.');
     const proposerRaison = sens === 'gauche' && !entree.echauffement;
+    // Focus avant le swipe : un bouton (désactivé pendant l'animation) ou la carte (remplacée)
+    // le perdrait ; il est rendu au même bouton ou à la nouvelle carte du dessus.
+    const focusAvant = document.activeElement;
+    const surCarte = focusAvant instanceof Element && cartes.contains(focusAvant);
     const suite = () => {
       verrou = false;
       dessiner(idDerriere);
       if (proposerRaison) montrerRaisons(entree.carte.id);
+      const perdu = !document.activeElement || document.activeElement === document.body
+        || !document.activeElement.isConnected;
+      if (!perdu || detruit) return;
+      if (surCarte) carteActive?.noeud.focus({ preventScroll: true });
+      else if (focusAvant instanceof HTMLElement && focusAvant.isConnected && !focusAvant.disabled) {
+        focusAvant.focus({ preventScroll: true });
+      }
     };
     if (mouvementReduit()) {
       suite();
