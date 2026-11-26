@@ -19,8 +19,8 @@ export const MODES = [
 
 export const LIBELLES_ETATS = {
   satisfaisant: 'Satisfaisant',
-  bon: 'Bon',
-  'tres-bon': 'Très bon',
+  bon: 'Bon état',
+  'tres-bon': 'Très bon état',
   neuf: 'Neuf',
   'neuf-etiquette': 'Neuf avec étiquette',
 };

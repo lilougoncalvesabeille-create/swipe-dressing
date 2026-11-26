@@ -760,6 +760,14 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// Page restaurée depuis le cache arrière/avant du navigateur : rien n'a tourné pendant ce temps,
+// on relit le stockage et le dépôt comme au retour au premier plan.
+window.addEventListener('pageshow', (e) => {
+  if (!e.persisted) return;
+  resynchroniser();
+  synchroniser();
+});
+
 // Retour du réseau : ce qui attendait part.
 window.addEventListener('online', () => synchroniser());
 

@@ -368,6 +368,11 @@ export function monterPile(conteneur, options) {
   function auClavier(e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.target instanceof Element && e.target.closest('input, select, textarea, [contenteditable]')) return;
+    // Flèche maintenue : un seul swipe (sinon toute la pile défile tant que la touche reste enfoncée).
+    if (e.repeat) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+      return;
+    }
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       agir('gauche');
