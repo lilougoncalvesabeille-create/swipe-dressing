@@ -355,7 +355,7 @@ export function formulaireProfil(conteneur, profil, auValider, options = {}) {
   const statut = el('p', { class: 'statut', role: 'status', 'aria-live': 'polite' });
   const precedent = el('button', { type: 'button', class: 'bouton bouton-secondaire' }, 'Précédent');
   const suivant = el('button', { type: 'submit', class: 'bouton bouton-principal' });
-  const progression = el('div', { class: 'progression' });
+  const progression = el('div', { class: 'progression', 'aria-live': 'polite' });
   const barre = el('div', { class: 'progression-barre' }, el('span'));
 
   const form = el('form', { class: `formulaire-profil ${enEtapes ? 'en-etapes' : 'en-page'}`, novalidate: true },

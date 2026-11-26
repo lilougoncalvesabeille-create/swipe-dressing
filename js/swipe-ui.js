@@ -9,7 +9,7 @@ import { vitesseX, decisionSwipe, estUnTap, rotation, intensite } from './geste.
 import { messageRecolte, MESSAGES_RECOLTE } from './synchro.js';
 
 const DUREE_SORTIE = 250; // ms : animation de sortie (et verrou pendant ce temps)
-const DUREE_RAISONS = 4000; // ms : temps d'affichage des puces de raison
+const DUREE_RAISONS = 6000; // ms : temps d'affichage des puces de raison (assez pour un lecteur d'écran)
 const DUREE_NOTE = 1500; // ms : confirmation « Noté »
 const MAX_ECHANTILLONS = 30;
 

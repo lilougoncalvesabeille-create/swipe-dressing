@@ -14,12 +14,10 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
   le suivant ferme l'appli comme avant.
 
 ## Swipe
-- Les puces de raison du refus disparaissent au bout de 4 s, ce qui est court pour un lecteur d'écran.
 - Pendant l'animation de sortie, un appui sur un bouton en plein glissé provoque un petit défaut visuel.
 - Au clavier, le focus se perd après un swipe.
 
 ## Accessibilité
-- Le changement d'étape du questionnaire n'est pas annoncé au lecteur d'écran.
 - Le contraste du texte d'exemple dans les champs est d'environ 4:1.
 
 ## Fiche détail
