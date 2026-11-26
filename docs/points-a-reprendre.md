@@ -37,8 +37,10 @@ maintenue, page restaurée par le bouton retour du navigateur, libellés d'état
 
 ## Sources d'annonces
 - Zalando refuse les requêtes automatiques (403 Akamai) ; eBay, Vestiaire Collective et Depop aussi.
-  Leboncoin interdit la recherche dans son robots.txt. Veepee demande un compte. Ils ne sont pas
-  récoltés : seuls Vinted et Label Emmaüs le sont.
+  Leboncoin interdit la recherche dans son robots.txt. Veepee demande un compte. momox fashion ne
+  donne ni prix ni taille dans son catalogue JSON et limite le débit (429) dès la 3e requête. Patatam
+  pose des réserves sur la réutilisation automatique dans son robots.txt. Ils ne sont pas récoltés :
+  seuls Vinted et Label Emmaüs le sont (essais du 2026-11-27).
 
 ## Divers
 - En local, le service worker sert les fichiers depuis le cache. Pour voir ses modifications, il faut le
