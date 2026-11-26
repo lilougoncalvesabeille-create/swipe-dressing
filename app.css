@@ -34,7 +34,20 @@ body {
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overflow-wrap: anywhere;
+  /* Pas de sélection bleue ni de menu « copier » quand on reste appuyé : c'est une appli, pas une page. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
+
+/* Les champs de saisie restent sélectionnables (coller la clé, corriger une marque…). */
+input, textarea, select, [contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+
+img { -webkit-user-drag: none; }
 
 h1, h2 { line-height: 1.2; margin: 0; }
 h1 { font-size: 1.7rem; }
@@ -243,6 +256,8 @@ input:user-invalid, select:user-invalid { border-color: var(--danger); }
 .aide-tailles .grille-champs { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 .aide-tailles input { background: var(--surface); }
 .aide-tailles .aide-estimation:empty { display: none; }
+.relier { margin-bottom: 20px; }
+.relier .statut:empty { display: none; }
 
 /* Sélecteur segmenté (rayon, stricte / large) */
 .segments {

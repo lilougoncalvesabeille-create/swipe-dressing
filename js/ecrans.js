@@ -411,13 +411,61 @@ export function formulaireProfil(conteneur, profil, auValider, options = {}) {
 
 // --- Écrans questionnaire et réglages ---
 
-enregistrerEcran('questionnaire', (conteneur, { profil, auValider }) => {
+// « Déjà utilisé sur un autre appareil ? » : relier ce téléphone au dépôt avant le questionnaire.
+// Le profil, les favoris et l'historique du dépôt arrivent alors ici (le questionnaire est sauté).
+function boiteRelier(synchro, retourLien) {
+  const champ = el('input', {
+    type: 'password', id: 'relier-cle', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off',
+    spellcheck: 'false', placeholder: 'github_pat_…',
+  });
+  const retour = el('p', { class: 'statut', role: 'status', 'aria-live': 'polite' });
+  const bouton = el('button', { type: 'button', class: 'bouton bouton-principal' }, 'Récupérer mes données');
+  const montrer = ({ texte, erreur }) => {
+    retour.textContent = texte ?? '';
+    retour.classList.toggle('statut-erreur', !!erreur);
+  };
+  bouton.addEventListener('click', async () => {
+    const saisie = champ.value;
+    champ.value = ''; // la clé ne reste pas affichée dans la page
+    const probleme = problemeSaisieCle(saisie);
+    if (probleme) {
+      montrer({ texte: probleme, erreur: true });
+      return;
+    }
+    bouton.disabled = true;
+    montrer({ texte: 'Test de la clé…' });
+    let resultat;
+    try {
+      resultat = await synchro.enregistrerCle(saisie);
+    } catch {
+      resultat = { ok: false, raison: 'github', message: 'Le test de la clé a échoué : réessaie plus tard.' };
+    }
+    bouton.disabled = false;
+    montrer(resultat.enregistree
+      ? { texte: 'Appareil relié : ton profil et tes favoris arrivent.' }
+      : { ...retourCle(resultat), erreur: true });
+  });
+  if (retourLien) montrer(retourLien);
+  return el('details', { class: 'aide-tailles relier', open: !!retourLien },
+    el('summary', {}, 'Déjà utilisé sur un autre appareil ?'),
+    el('p', { class: 'aide' },
+      'Sur l’autre appareil : Réglages → Synchronisation → « Copier le lien pour un autre appareil », '
+      + 'puis ouvre ce lien ici. Ou colle ta clé GitHub :'),
+    el('label', { for: 'relier-cle', class: 'visuellement-cache' }, 'Clé GitHub'),
+    champ,
+    bouton,
+    retour,
+  );
+}
+
+enregistrerEcran('questionnaire', (conteneur, { profil, auValider, synchro, retourLien }) => {
   conteneur.append(
     el('header', { class: 'entete' },
       titre('Bienvenue'),
       el('p', { class: 'chapeau' },
         'Quelques questions pour ne te montrer que ce qui te va. Tout reste modifiable dans les Réglages.')),
   );
+  if (synchro) conteneur.append(boiteRelier(synchro, retourLien));
   formulaireProfil(conteneur, profil, auValider, { etapes: true });
 });
 
@@ -445,6 +493,8 @@ function sectionSynchro(synchro, etat) {
   const detail = el('p', { class: 'aide synchro-detail', hidden: true });
   const boutonEnregistrer = el('button', { type: 'button', class: 'bouton bouton-principal' }, 'Enregistrer et tester');
   const boutonRetirer = el('button', { type: 'button', class: 'bouton bouton-secondaire' }, 'Retirer la clé');
+  const boutonLien = el('button', { type: 'button', class: 'bouton bouton-secondaire' },
+    'Copier le lien pour un autre appareil');
 
   let occupe = false;
   // Dernier état affiché hors « en-cours » (texte et couleur) : pas de clignotement à chaque synchro.
@@ -479,6 +529,7 @@ function sectionSynchro(synchro, etat) {
     ligneRecolte.hidden = !avecCle;
     ligneEnvoi.hidden = !avecCle;
     boutonRetirer.hidden = !avecCle;
+    boutonLien.hidden = !avecCle;
     champCle.placeholder = avecCle ? 'Colle une nouvelle clé pour la remplacer' : 'github_pat_…';
     boutonEnregistrer.disabled = occupe;
     boutonRetirer.disabled = occupe;
@@ -524,8 +575,19 @@ function sectionSynchro(synchro, etat) {
     maj();
   }
 
+  async function copierLien() {
+    const { ok, partage } = await synchro.copierLien();
+    montrerRetour(ok
+      ? {
+        texte: `${partage ? 'Lien partagé' : 'Lien copié'}. Ouvre-le sur ton autre appareil : la clé y sera enregistrée et tout se synchronisera.`,
+        detail: 'Ne le partage avec personne : il donne accès à tes données. Efface-le une fois utilisé.',
+      }
+      : { texte: 'Copie impossible sur cet appareil : colle ta clé à la main sur l’autre appareil.', erreur: true });
+  }
+
   boutonEnregistrer.addEventListener('click', enregistrer);
   boutonRetirer.addEventListener('click', retirer);
+  boutonLien.addEventListener('click', copierLien);
   champCle.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -546,6 +608,7 @@ function sectionSynchro(synchro, etat) {
       el('p', { class: 'aide', id: 'sync-cle-aide' },
         'Gardée seulement sur ce téléphone. Une fois enregistrée, elle n’est plus jamais affichée.')),
     el('div', { class: 'synchro-boutons' }, boutonEnregistrer, boutonRetirer),
+    boutonLien,
     retour,
     detail,
     el('details', { class: 'pas-a-pas' },
@@ -577,11 +640,11 @@ enregistrerEcran('reglages', (conteneur, { profil, auEnregistrer, auToutEffacer,
   conteneur.append(
     el('section', { class: 'zone-danger', 'aria-labelledby': 'titre-effacer' },
       el('h2', { id: 'titre-effacer' }, 'Repartir de zéro'),
-      el('p', { class: 'aide' }, 'Efface ton profil, tes favoris et ton historique sur ce téléphone.'),
+      el('p', { class: 'aide' }, 'Efface ton profil, tes favoris et ton historique (sur tous tes appareils reliés si une clé est enregistrée).'),
       el('button', {
         type: 'button', class: 'bouton bouton-danger',
         onclick: () => {
-          if (window.confirm('Tout effacer ? Ton profil, tes favoris et ton historique seront supprimés, et les annonces déjà vues pourront revenir.')) {
+          if (window.confirm('Tout effacer ? Ton profil, tes favoris et ton historique seront supprimés, ici et sur tes autres appareils reliés. Les annonces déjà vues ne reviendront pas.')) {
             auToutEffacer();
           }
         },

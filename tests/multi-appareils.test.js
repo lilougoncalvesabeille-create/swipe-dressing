@@ -1,0 +1,92 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  versSwipesJson, fusionnerDistant, importerDistants, profilDistantAAdopter, lienAvecCle, cleDuFragment,
+  depuisSwipesJson,
+} from '../js/synchro.js';
+
+const carte = (id, extra = {}) => ({ id, titre: `Annonce ${id}`, prix: 20, photo: 'https://images1.vinted.net/x.webp', ...extra });
+const favori = (id, t = '2026-11-26T10:00:00Z') => ({ id, sens: 'droite', t, raison: null, carte: carte(id), emb: 'QUJD' });
+const refus = (id, t = '2026-11-26T10:00:00Z') => ({ id, sens: 'gauche', t, raison: null, carte: carte(id), emb: 'QUJD' });
+
+test('swipes.json : les favoris voyagent avec leur carte, sans empreinte ; les refus sans carte', () => {
+  const objet = versSwipesJson([favori('vinted:1'), refus('vinted:2')]);
+  const [f, r] = objet.swipes;
+  assert.deepEqual(f.carte, carte('vinted:1'));
+  assert.equal('emb' in f, false);
+  assert.equal(JSON.stringify(objet).includes('QUJD'), false);
+  assert.equal('carte' in r, false);
+});
+
+test('swipes.json : carte d’une autre annonce ou carte avec empreinte', () => {
+  const autre = { ...favori('vinted:1'), carte: carte('vinted:9') };
+  assert.equal('carte' in versSwipesJson([autre]).swipes[0], false);
+  const avecEmb = { ...favori('vinted:1'), carte: { ...carte('vinted:1'), emb: 'QUJD' } };
+  assert.equal('emb' in versSwipesJson([avecEmb]).swipes[0].carte, false);
+});
+
+test('fusion : la carte est gardée quand le gagnant n’en a pas', () => {
+  const local = versSwipesJson([favori('vinted:1')]);
+  const distantSansCarte = { version: 1, swipes: [{ id: 'vinted:1', sens: 'droite', t: '2026-11-26T10:00:00Z' }], annules: [], remis_a_zero: null, echauffement_faits: 0 };
+  assert.deepEqual(fusionnerDistant(distantSansCarte, local).swipes[0].carte, carte('vinted:1'));
+  assert.deepEqual(fusionnerDistant(local, distantSansCarte).swipes[0].carte, carte('vinted:1'));
+  // Repêché ailleurs plus tard (sans carte) : le repêchage gagne et récupère la carte.
+  const repeche = { ...distantSansCarte, swipes: [{ id: 'vinted:1', sens: 'droite', t: '2026-11-26T10:00:00Z', repeche_le: '2026-11-26T12:00:00Z' }] };
+  const fus = fusionnerDistant(local, repeche).swipes[0];
+  assert.equal(fus.repeche_le, '2026-11-26T12:00:00Z');
+  assert.deepEqual(fus.carte, carte('vinted:1'));
+});
+
+test('import : favoris d’un autre appareil avec carte ; carte manquante complétée ; repêchage', () => {
+  const ailleurs = versSwipesJson([favori('vinted:1'), refus('vinted:2'), favori('vinted:3')]);
+  // Ce téléphone connaît déjà vinted:3, sans carte (importé avant que les cartes ne voyagent).
+  const ici = [{ id: 'vinted:3', sens: 'droite', t: '2026-11-26T10:00:00Z', distant: true }];
+  const res = importerDistants(ici, ailleurs);
+  const parId = Object.fromEntries(res.map((s) => [s.id, s]));
+  assert.deepEqual(parId['vinted:1'].carte, carte('vinted:1'));
+  assert.equal(parId['vinted:1'].distant, true);
+  assert.equal(parId['vinted:2'].carte, undefined);
+  assert.deepEqual(parId['vinted:3'].carte, carte('vinted:3'));
+  assert.equal(res.at(-1).id, 'vinted:3'); // les swipes d'ici restent en dernier (« annuler »)
+
+  // Refusé ici, repêché ailleurs ensuite : devient un favori ici.
+  const refuseIci = [refus('vinted:5', '2026-11-26T09:00:00Z')];
+  const repecheAilleurs = { version: 1, swipes: [{ id: 'vinted:5', sens: 'droite', t: '2026-11-26T09:00:00Z', repeche_le: '2026-11-26T11:00:00Z' }], annules: [], remis_a_zero: null, echauffement_faits: 0 };
+  const apres = importerDistants(refuseIci, repecheAilleurs)[0];
+  assert.equal(apres.sens, 'droite');
+  assert.equal(apres.repeche_le, '2026-11-26T11:00:00Z');
+  assert.deepEqual(apres.carte, carte('vinted:5'));
+
+  // Rien de nouveau : même tableau.
+  const deja = [favori('vinted:1')];
+  assert.equal(importerDistants(deja, versSwipesJson(deja)), deja);
+});
+
+test('lecture tolérante : carte mal formée ignorée', () => {
+  const lu = depuisSwipesJson({ swipes: [{ id: 'vinted:1', sens: 'droite', t: '2026-11-26T10:00:00Z', carte: 'cassée' }] });
+  assert.equal('carte' in lu.swipes[0], false);
+});
+
+test('profilDistantAAdopter', () => {
+  const distant = { version: 1, profil: { rayon: 'homme', questionnaireFait: true }, modifie_le: '2026-11-26T18:46:00Z' };
+  assert.equal(profilDistantAAdopter(null), 'absent');
+  assert.equal(profilDistantAAdopter({ profil: 'x' }), 'absent');
+  assert.deepEqual(profilDistantAAdopter(distant, null), { profil: distant.profil, modifieLe: distant.modifie_le });
+  assert.deepEqual(profilDistantAAdopter(distant, '2026-11-26T10:00:00Z').modifieLe, distant.modifie_le);
+  assert.equal(profilDistantAAdopter(distant, '2026-11-26T18:46:00Z'), null);
+  assert.equal(profilDistantAAdopter(distant, '2026-11-27T00:00:00Z'), null);
+});
+
+test('lien avec la clé : aller-retour, fragment seulement', () => {
+  const cle = 'github_pat_11ABC_def+/=';
+  const lien = lienAvecCle('https://exemple.github.io/swipe-dressing/?x=1#ancien', cle);
+  assert.equal(lien.split('#').length, 2);
+  assert.ok(lien.startsWith('https://exemple.github.io/swipe-dressing/?x=1#cle='));
+  assert.equal(new URL(lien).search, '?x=1'); // la clé n'est pas dans la partie envoyée au serveur
+  assert.equal(cleDuFragment(new URL(lien).hash), cle);
+  assert.equal(cleDuFragment(''), null);
+  assert.equal(cleDuFragment('#autre=1'), null);
+  assert.equal(cleDuFragment('#cle='), null);
+  assert.equal(cleDuFragment('#cle=%E0%A4%A'), null);
+  assert.equal(cleDuFragment('#cle=a%20b'), null);
+});

@@ -11,6 +11,7 @@ import { viderCacheEmpreintes } from './empreintes.js';
 import {
   creerClient, versSwipesJson, versProfilJson, envoyerSwipes, envoyerProfil, swipesApresImport,
   recolteEnRetard, finDeCle, problemeSaisieCle, FICHIERS, ErreurCle, ErreurReseau,
+  profilDistantAAdopter, lienAvecCle, cleDuFragment,
 } from './synchro.js';
 import { completerProfil } from './formulaire.js';
 import { afficherEcran, majBandeauStockage } from './ecrans.js';
@@ -89,6 +90,7 @@ const etat = {
   fiche: null, // {id, origine, defilement, jeton} : fiche détail ouverte
   carteDessus: null, // id de la carte visible sur le dessus de l'écran de swipe
   synchro: etatSynchroInitial(), // état de la synchronisation avec le dépôt privé (écran Réglages)
+  retourLien: null, // {texte, erreur} : résultat d'un lien « autre appareil » ouvert au démarrage
 };
 
 // Pile telle que chargée, avant d'en écarter les cartes déjà vues avant « Tout effacer ».
@@ -342,6 +344,34 @@ async function lireAnnexes(c) {
   majSynchro({ recolte: valeur });
 }
 
+// profil.json plus récent que celui de ce téléphone (modifié sur un autre appareil, ou ce téléphone
+// vient d'être relié) : il remplace le profil d'ici, sauf les mensurations qui ne voyagent pas.
+// Dépôt sans profil : celui d'ici part (s'il a été rempli).
+async function adopterProfilDistant(c) {
+  const gen = generation;
+  if (lireEtatSynchro().profilEnAttente) return; // un changement d'ici part d'abord
+  const lu = await c.lire(FICHIERS.profil);
+  const s = lireEtatSynchro();
+  if (gen !== generation || s.profilEnAttente) return; // « Tout effacer » ou profil modifié entre-temps
+  const choix = profilDistantAAdopter(lu?.json ?? null, s.profilModifieLe ?? null);
+  if (choix === 'absent') {
+    if (etat.profil.questionnaireFait) {
+      ecrireEtatSynchro({ profilEnAttente: true, profilModifieLe: s.profilModifieLe ?? new Date().toISOString() });
+      envoyerEnFond();
+    }
+    return;
+  }
+  if (!choix) return;
+  const questionnaireAvant = etat.profil.questionnaireFait;
+  etat.profil = completerProfil({ ...choix.profil, mensurations: etat.profil.mensurations });
+  store.ecrire(CLE_PROFIL, etat.profil);
+  ecrireEtatSynchro({ profilModifieLe: choix.modifieLe });
+  majBandeau();
+  if (etat.ecran === 'questionnaire' && etat.profil.questionnaireFait) naviguer('swipe');
+  else if (questionnaireAvant && !etat.profil.questionnaireFait) naviguer('questionnaire');
+  else redessiner(); // la pile filtrée dépend du profil (tailles, budget…)
+}
+
 // pile.json du dépôt privé (repli sur sd:pile, jamais sur la démo).
 async function chargerPileDistante(c) {
   let lu = null;
@@ -376,7 +406,10 @@ async function synchroniser({ forcer = false } = {}) {
   const [ePile, eAnnexes, eEnvoi] = await Promise.all([
     relire ? tache(() => chargerPileDistante(c)) : null,
     relire ? tache(() => lireAnnexes(c)) : null,
-    tache(() => envoyer(c)),
+    tache(async () => {
+      await envoyer(c);
+      if (relire) await adopterProfilDistant(c); // après l'envoi : un profil d'ici en attente est parti
+    }),
   ]);
   if (relire && !ePile && !eAnnexes) {
     const t = new Date().toISOString();
@@ -403,7 +436,9 @@ const actionsSynchro = {
     // Une clé refusée n'est pas gardée ; sans réseau, elle l'est (elle sera essayée plus tard).
     if (resultat.raison === 'cle' || resultat.raison === 'acces') return { ...resultat, enregistree: false };
     store.ecrire(CLE_GITHUB, cle);
-    ecrireEtatSynchro({ profilEnAttente: true, profilModifieLe: new Date().toISOString() });
+    // Relier un appareil, c'est rejoindre le dépôt : son profil gagne (adopterProfilDistant), sauf
+    // un changement fait ici et pas encore envoyé. Dépôt sans profil : celui d'ici part.
+    if (!lireEtatSynchro().profilEnAttente) ecrireEtatSynchro({ profilModifieLe: null });
     shaPile = null;
     majSynchro({ statut: 'pret', erreur: null });
     synchroniser({ forcer: true });
@@ -430,6 +465,28 @@ const actionsSynchro = {
   },
   /** Les 4 derniers caractères de la clé enregistrée ('' sans clé) : seule partie montrable. */
   finCle: () => finDeCle(lireCle()),
+  /**
+   * Copie dans le presse-papiers le lien qui relie un autre appareil (clé dans le fragment #cle=…).
+   * La clé ne sort pas de ce module : l'écran ne reçoit que {ok}.
+   */
+  copierLien: async () => {
+    const cle = lireCle();
+    if (!cle) return { ok: false };
+    const lien = lienAvecCle(location.href, cle);
+    try {
+      await navigator.clipboard.writeText(lien);
+      return { ok: true, partage: false };
+    } catch {
+      // Presse-papiers refusé : menu « Partager » du téléphone (s'envoyer le lien à soi-même).
+    }
+    try {
+      if (typeof navigator.share !== 'function') return { ok: false };
+      await navigator.share({ title: 'Swipe Dressing', url: lien });
+      return { ok: true, partage: true };
+    } catch {
+      return { ok: false };
+    }
+  },
   synchroniser: () => synchroniser({ forcer: true }),
   recolteEnRetard: () => lireCle() !== null && recolteEnRetard(etat.synchro.recolte),
 };
@@ -568,6 +625,7 @@ const donneesPour = {
   }),
   questionnaire: () => ({
     profil: etat.profil,
+    retourLien: etat.retourLien,
     auValider: (profil) => {
       etat.profil = { ...profil, questionnaireFait: true };
       sauverProfil();
@@ -701,12 +759,28 @@ async function chargerLaPile() {
   installerPile(await chargerPile(URL_PILE, store));
 }
 
+// Lien « autre appareil » (#cle=…) : la clé est retirée de l'adresse tout de suite (ni historique,
+// ni favori, ni copie de l'adresse ne la gardent), puis testée et enregistrée.
+async function relierParLien(cle) {
+  const resultat = await actionsSynchro.enregistrerCle(cle);
+  etat.retourLien = resultat.enregistree
+    ? { texte: 'Appareil relié : ton profil et tes favoris arrivent.', erreur: false }
+    : { texte: resultat.message ?? 'Le lien n’a pas marché : colle la clé à la main.', erreur: true };
+  if (etat.ecran === 'questionnaire') naviguer('questionnaire');
+}
+
 async function demarrer() {
   // Après un rechargement sur une fiche, l'entrée de l'historique n'est plus une fiche ouverte.
   if (history.state?.sdFiche) history.replaceState(null, '');
+  const cleDuLien = cleDuFragment(location.hash);
+  if (location.hash.startsWith('#cle=')) history.replaceState(null, '', location.pathname + location.search);
   brancherNavigation();
   majBandeau();
   naviguer(etat.profil.questionnaireFait ? 'swipe' : 'questionnaire');
+  if (cleDuLien) {
+    await relierParLien(cleDuLien);
+    if (lireCle()) return; // enregistrerCle a lancé la synchronisation (pile comprise)
+  }
   await chargerLaPile();
 }
 

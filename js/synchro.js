@@ -185,19 +185,38 @@ export function creerClient({ cle, fetch: f = globalThis.fetch?.bind(globalThis)
 }
 
 // --- Format de swipes.json ---
-// { "version": 1, "swipes": [{id, sens, t, raison?, repeche_le?}], "annules": [{id, t}],
+// { "version": 1, "swipes": [{id, sens, t, raison?, repeche_le?, carte?}], "annules": [{id, t}],
 //   "remis_a_zero": ISO|null, "echauffement_faits": int }
+// `carte` (sans empreinte) accompagne les favoris : l'écran Favoris d'un autre appareil les affiche.
 
 const estDemo = (id) => id.startsWith('demo:');
 const texte = (v) => typeof v === 'string' && v.length > 0;
 const swipeLisible = (s) => s !== null && typeof s === 'object' && texte(s.id) && SENS.includes(s.sens) && texte(s.t);
 const annuleLisible = (a) => a !== null && typeof a === 'object' && texte(a.id) && texte(a.t);
 
+const objetSimple = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+// Carte d'un favori telle qu'envoyée dans swipes.json (sans empreinte), ou null.
+function carteDeFavori(s) {
+  if (s.sens !== 'droite' || !objetSimple(s.carte) || s.carte.id !== s.id) return null;
+  const { emb, ...carte } = s.carte;
+  return carte;
+}
+
 function swipeCompact(s) {
   const r = { id: s.id, sens: s.sens, t: s.t };
   if (texte(s.raison)) r.raison = s.raison;
   if (texte(s.repeche_le)) r.repeche_le = s.repeche_le;
+  const carte = carteDeFavori(s);
+  if (carte) r.carte = carte;
   return r;
+}
+
+// Le swipe gagnant d'une fusion garde la carte de l'autre côté s'il n'en a pas (favori envoyé
+// avant que les cartes ne voyagent, ou venu d'un appareil qui ne l'avait pas).
+function avecCarte(gagnant, autre) {
+  if (gagnant.carte || !autre?.carte || gagnant.sens !== 'droite') return gagnant;
+  return { ...gagnant, carte: autre.carte };
 }
 
 /**
@@ -269,7 +288,9 @@ export function fusionnerDistant(local, distant) {
   }
   const parId = new Map();
   for (const s of [...L.swipes, ...D.swipes]) {
-    if (!parId.has(s.id) || dateSwipe(s) > dateSwipe(parId.get(s.id))) parId.set(s.id, s);
+    const deja = parId.get(s.id);
+    if (!deja || dateSwipe(s) > dateSwipe(deja)) parId.set(s.id, avecCarte(s, deja));
+    else parId.set(s.id, avecCarte(deja, s));
   }
   const swipes = [...parId.values()]
     .filter((s) => {
@@ -356,18 +377,68 @@ export async function envoyerProfil(client, objetProfil, { essais = 3 } = {}) {
 
 /**
  * Ajoute aux swipes du téléphone ceux que swipes.json connaît en plus (faits sur un autre appareil,
- * ou perdus par ce téléphone) : en tête, sans carte ni empreinte, marqués `distant`. Leurs cartes ne
- * seront jamais remontrées. Un id annulé ici après la date de ce swipe n'est pas réimporté
- * (envoi parti juste avant l'annulation). Renvoie le même tableau si rien n'est ajouté.
+ * ou perdus par ce téléphone) : en tête, sans empreinte, marqués `distant` (les favoris avec leur
+ * carte, pour l'écran Favoris). Leurs annonces ne seront jamais remontrées. Un id annulé ici après
+ * la date de ce swipe n'est pas réimporté (envoi parti juste avant l'annulation).
+ * Les swipes déjà là reçoivent la carte qui leur manque, et un repêchage fait ailleurs depuis.
+ * Renvoie le même tableau si rien ne change.
  */
 export function importerDistants(swipes, objetFinal, annules = []) {
   if (!objetFinal) return swipes;
+  const distants = depuisSwipesJson(objetFinal).swipes;
+  const parId = new Map(distants.map((s) => [s.id, s]));
+  let change = false;
+  const completes = swipes.map((s) => {
+    const d = parId.get(s.id);
+    if (!d) return s;
+    let r = s;
+    if (dateSwipe(d) > dateSwipe(s) && d.sens === 'droite' && s.sens !== 'droite') {
+      r = { ...r, sens: 'droite', repeche: true, repeche_le: d.repeche_le ?? d.t };
+    }
+    if (!r.carte && d.carte && r.sens === 'droite') r = { ...r, carte: d.carte };
+    if (r !== s) change = true;
+    return r;
+  });
   const vus = new Set(swipes.map((s) => s.id));
   const annulesIci = new Map((Array.isArray(annules) ? annules : []).filter(annuleLisible).map((a) => [a.id, ms(a.t)]));
-  const nouveaux = depuisSwipesJson(objetFinal).swipes
+  const nouveaux = distants
     .filter((s) => !vus.has(s.id) && !((annulesIci.get(s.id) ?? -Infinity) >= dateSwipe(s)))
     .map((s) => ({ ...s, distant: true }));
-  return nouveaux.length > 0 ? [...nouveaux, ...swipes] : swipes;
+  if (nouveaux.length === 0 && !change) return swipes;
+  return [...nouveaux, ...completes];
+}
+
+/**
+ * profil.json lu dans le dépôt → que faire du profil de ce téléphone :
+ * - 'absent' : pas de profil (lisible) dans le dépôt ;
+ * - null : le dépôt n'a rien de plus récent que la dernière version connue ici (`modifieLeLocal`) ;
+ * - { profil, modifieLe } : profil plus récent (autre appareil, ou ce téléphone vient d'arriver).
+ */
+export function profilDistantAAdopter(distant, modifieLeLocal = null) {
+  if (!objetSimple(distant) || !objetSimple(distant.profil)) return 'absent';
+  if (ms(distant.modifie_le) <= ms(modifieLeLocal)) return null;
+  return { profil: distant.profil, modifieLe: texte(distant.modifie_le) ? distant.modifie_le : null };
+}
+
+/**
+ * Lien qui enregistre la clé sur un autre appareil : la clé va dans le fragment (#cle=…), que le
+ * navigateur n'envoie jamais au serveur ; l'appli l'efface de l'adresse dès l'ouverture.
+ */
+export function lienAvecCle(adresse, cle) {
+  const base = String(adresse).split('#')[0];
+  return `${base}#cle=${encodeURIComponent(cle)}`;
+}
+
+/** Clé lue dans le fragment d'adresse (#cle=…), ou null. */
+export function cleDuFragment(fragment) {
+  const m = /^#cle=([^&]+)/.exec(String(fragment ?? ''));
+  if (!m) return null;
+  try {
+    const cle = decodeURIComponent(m[1]).trim();
+    return cle && !/\s/.test(cle) ? cle : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
